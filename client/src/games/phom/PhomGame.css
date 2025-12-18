@@ -1,0 +1,304 @@
+.phom-game {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, #0d1117 100%);
+}
+
+.phom-loading {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+}
+
+/* Header */
+.phom-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.game-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.round-info {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.turn-indicator {
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+}
+
+.turn-indicator.my-turn {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    font-weight: 600;
+    animation: pulse 2s infinite;
+}
+
+.deck-count {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Other Players */
+.other-players {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.opponent {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    min-width: 180px;
+    text-align: center;
+}
+
+.opponent.current {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.opponent-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+}
+
+.opponent-name {
+    font-weight: 600;
+}
+
+.opponent-cards {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.opponent-hand {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+}
+
+.opponent-card {
+    width: 20px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: 3px;
+}
+
+.more-cards {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-left: var(--spacing-xs);
+}
+
+.opponent-phoms {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-xs);
+    justify-content: center;
+}
+
+.phom-set.mini {
+    font-size: 0.625rem;
+    background: var(--accent-success);
+    color: white;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+/* Game Table */
+.game-table {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xl);
+    padding: var(--spacing-xl);
+    background: radial-gradient(ellipse at center, #1a3a1a 0%, #0d1a0d 100%);
+    border-radius: var(--radius-xl);
+    border: 4px solid #2d4a2d;
+    margin-bottom: var(--spacing-lg);
+}
+
+.deck-pile,
+.discard-pile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.deck-pile.clickable,
+.discard-pile.clickable {
+    cursor: pointer;
+}
+
+.deck-pile.clickable:hover .deck-visual,
+.discard-pile.clickable:hover .playing-card {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
+
+.pile-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.empty-pile {
+    width: 70px;
+    height: 100px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.75rem;
+}
+
+/* My Phoms */
+.my-phoms {
+    margin-bottom: var(--spacing-md);
+}
+
+.my-phoms h3 {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.phoms-list {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.phom-set {
+    display: flex;
+    gap: -10px;
+    background: rgba(16, 185, 129, 0.1);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--accent-success);
+}
+
+.phom-set .playing-card {
+    margin-left: -10px;
+}
+
+.phom-set .playing-card:first-child {
+    margin-left: 0;
+}
+
+/* My Hand */
+.my-hand-section {
+    margin-top: auto;
+}
+
+.my-hand-section h3 {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.my-hand {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    min-height: 160px;
+}
+
+.my-hand .playing-card {
+    transition: all var(--transition-fast);
+}
+
+/* Actions */
+.game-actions {
+    padding: var(--spacing-md) 0;
+    text-align: center;
+}
+
+.game-error {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--accent-danger);
+    margin-bottom: var(--spacing-md);
+    display: inline-block;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+}
+
+.action-hint {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Game Over Overlay */
+.game-over-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.game-over-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    text-align: center;
+    min-width: 300px;
+}
+
+.game-over-modal h2 {
+    margin-bottom: var(--spacing-md);
+}
+
+.final-scores {
+    margin: var(--spacing-lg) 0;
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.score-row:last-child {
+    border-bottom: none;
+}
