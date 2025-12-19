@@ -75,6 +75,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
         phom: { name: 'Phom', icon: '🎴', players: '2-4', description: 'Vietnamese Rummy' },
         poker: { name: 'Poker', icon: '♠️', players: '2-9', description: 'Texas Hold\'em' },
         durak: { name: 'Durak', icon: '🃏', players: '2-6', description: 'Russian Card Game' },
+        tictactoe: { name: 'Tic-Tac-Toe', icon: '❌', players: '2', description: 'Classic XO Game' },
     };
 
     return (

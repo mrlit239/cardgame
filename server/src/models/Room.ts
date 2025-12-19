@@ -45,7 +45,7 @@ const roomSchema = new Schema<IRoom>(
         },
         gameType: {
             type: String,
-            enum: ['phom', 'poker', 'durak'],
+            enum: ['phom', 'poker', 'durak', 'tictactoe'],
             required: true,
         },
         hostId: {

@@ -109,6 +109,8 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                 validMaxPlayers = Math.min(Math.max(maxPlayers, 2), 9);
             } else if (gameType === 'durak') {
                 validMaxPlayers = Math.min(Math.max(maxPlayers, 2), 6);
+            } else if (gameType === 'tictactoe') {
+                validMaxPlayers = 2; // Always exactly 2 players
             }
 
             if (isDatabaseConnected()) {

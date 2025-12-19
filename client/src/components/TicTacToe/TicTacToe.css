@@ -1,0 +1,196 @@
+.tictactoe-container {
+    min-height: 100vh;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.tictactoe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.game-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.game-status {
+    font-size: 1.3rem;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.game-status.your-turn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.game-status.winner {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+
+.game-status.draw {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.tictactoe-start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    text-align: center;
+}
+
+.tictactoe-start-screen h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.btn-large {
+    font-size: 1.5rem;
+    padding: 20px 50px;
+    margin-top: 30px;
+}
+
+.players-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.player-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 30px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.player-card.active {
+    transform: scale(1.1);
+    border-color: #667eea;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+}
+
+.player-card.x-player .symbol {
+    color: #f5576c;
+}
+
+.player-card.o-player .symbol {
+    color: #38ef7d;
+}
+
+.player-card .symbol {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.player-card .name {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+}
+
+.vs {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.tictactoe-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+}
+
+.cell {
+    aspect-ratio: 1;
+    font-size: 4rem;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+}
+
+.cell:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #667eea;
+    transform: scale(1.02);
+}
+
+.cell:disabled {
+    cursor: not-allowed;
+}
+
+.cell.X {
+    color: #f5576c;
+    text-shadow: 0 0 20px rgba(245, 87, 108, 0.5);
+}
+
+.cell.O {
+    color: #38ef7d;
+    text-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
+}
+
+.cell.winning {
+    animation: winPulse 0.5s ease-in-out infinite alternate;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes winPulse {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.05);
+    }
+}
+
+.game-over-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.error {
+    color: #f5576c;
+    text-align: center;
+    margin: 10px 0;
+}

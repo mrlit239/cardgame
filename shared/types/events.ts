@@ -34,6 +34,12 @@ export interface ClientToServerEvents {
     'game:defend': (attackCardId: string, defenseCardId: string) => void;
     'game:takeCards': () => void;
     'game:passAttack': () => void;
+
+    // TicTacToe
+    'tictactoe:start': (callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'tictactoe:move': (position: number, callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'tictactoe:reset': (callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'tictactoe:leave': () => void;
 }
 
 // Server to Client Events
@@ -65,8 +71,25 @@ export interface ServerToClientEvents {
     'game:ended': (data: { winner: string; finalScores: Record<string, number> }) => void;
     'game:error': (message: string) => void;
 
+    // TicTacToe
+    'tictactoe:started': (state: TicTacToeState) => void;
+    'tictactoe:stateUpdate': (state: TicTacToeState) => void;
+    'tictactoe:gameOver': (data: { winner: string | null; isDraw: boolean; winningLine: number[] | null }) => void;
+    'tictactoe:playerLeft': (data: { playerId: string }) => void;
+
     // Chat
     'chat:message': (data: { playerId: string; username: string; message: string; timestamp: Date }) => void;
+}
+
+// TicTacToe types
+export interface TicTacToeState {
+    board: (string | null)[];
+    players: { id: string; username: string; symbol: 'X' | 'O' }[];
+    currentPlayerIndex: number;
+    winner: string | null;
+    isDraw: boolean;
+    isGameOver: boolean;
+    winningLine: number[] | null;
 }
 
 // Response types

@@ -1,7 +1,7 @@
 import type { Card } from './card';
 
 // Game Types
-export type GameType = 'phom' | 'poker' | 'durak';
+export type GameType = 'phom' | 'poker' | 'durak' | 'tictactoe';
 export type GameStatus = 'waiting' | 'playing' | 'finished';
 
 export interface Player {
