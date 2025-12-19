@@ -15,30 +15,46 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
     const [error, setError] = useState('');
 
     const isHost = user?.id === room.hostId;
-    const roomId = room.id || (room as any)._id;
+    const roomId = room.id || (room as unknown as { _id: string })._id;
 
     useEffect(() => {
         if (!socket) return;
 
-        socket.on('lobby:playerJoined', (data) => {
-            const dataRoomId = data.roomId || (data as any)._id;
-            if (dataRoomId === roomId) {
-                setRoom(prev => ({
-                    ...prev,
-                    players: [...prev.players, {
-                        id: data.player.id,
-                        username: data.player.username,
-                        hand: [],
-                        isReady: false,
-                        isConnected: true,
-                        score: 0
-                    }]
-                }));
+        // Listen for full room state updates (most reliable)
+        socket.on('lobby:roomUpdated', (updatedRoom: Room) => {
+            const updatedRoomId = updatedRoom.id || (updatedRoom as unknown as { _id: string })._id;
+            if (updatedRoomId === roomId) {
+                console.log('📦 Room updated:', updatedRoom.players.length, 'players');
+                setRoom(updatedRoom);
             }
         });
 
-        socket.on('lobby:playerLeft', (data) => {
-            const dataRoomId = data.roomId || (data as any)._id;
+        socket.on('lobby:playerJoined', (data: { roomId: string; player: { id: string; username: string } }) => {
+            console.log('👋 Player joined event:', data.player.username);
+            const dataRoomId = data.roomId;
+            if (dataRoomId === roomId) {
+                setRoom(prev => {
+                    // Check if player already exists
+                    if (prev.players.some(p => p.id === data.player.id)) {
+                        return prev;
+                    }
+                    return {
+                        ...prev,
+                        players: [...prev.players, {
+                            id: data.player.id,
+                            username: data.player.username,
+                            hand: [],
+                            isReady: false,
+                            isConnected: true,
+                            score: 0
+                        }]
+                    };
+                });
+            }
+        });
+
+        socket.on('lobby:playerLeft', (data: { roomId: string; playerId: string }) => {
+            const dataRoomId = data.roomId;
             if (dataRoomId === roomId) {
                 setRoom(prev => ({
                     ...prev,
@@ -47,8 +63,8 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
             }
         });
 
-        socket.on('lobby:playerReady', (data) => {
-            const dataRoomId = data.roomId || (data as any)._id;
+        socket.on('lobby:playerReady', (data: { roomId: string; playerId: string; isReady: boolean }) => {
+            const dataRoomId = data.roomId;
             if (dataRoomId === roomId) {
                 setRoom(prev => ({
                     ...prev,
@@ -69,6 +85,7 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
         });
 
         return () => {
+            socket.off('lobby:roomUpdated');
             socket.off('lobby:playerJoined');
             socket.off('lobby:playerLeft');
             socket.off('lobby:playerReady');

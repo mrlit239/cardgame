@@ -183,7 +183,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
             }
 
             // Clean up any stale room data for this user
-            await cleanupUserRooms(socket.userId!, io);
+            cleanupUserRooms(socket.userId!);
 
             callback({ success: true });
             console.log(`✅ User authenticated via token: ${decoded.username}`);
