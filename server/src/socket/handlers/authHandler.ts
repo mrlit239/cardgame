@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { User } from '../../models';
 import { config } from '../../config';
 import { isDatabaseConnected } from '../../config/database';
+import { cleanupUserRooms } from './lobbyHandler';
 
 interface AuthenticatedSocket extends Socket {
     userId?: string;
@@ -180,6 +181,9 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
                 socket.userId = decoded.userId;
                 socket.username = decoded.username;
             }
+
+            // Clean up any stale room data for this user
+            await cleanupUserRooms(socket.userId!, io);
 
             callback({ success: true });
             console.log(`✅ User authenticated via token: ${decoded.username}`);

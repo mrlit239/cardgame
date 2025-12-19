@@ -404,37 +404,64 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
         }
     });
 
-    // Handle disconnect
+    // Handle disconnect - properly remove player from room
     socket.on('disconnect', async () => {
+        console.log(`🔌 Disconnected: ${socket.id} - user ${socket.userId}`);
+
         if (!socket.currentRoomId || !socket.userId) return;
 
         const roomId = socket.currentRoomId;
+        const userId = socket.userId;
 
         try {
             if (isDatabaseConnected()) {
                 const room = await Room.findById(roomId);
                 if (!room) return;
 
-                const player = room.players.find(p => p.userId === socket.userId);
-                if (player) {
-                    player.isConnected = false;
-                    player.socketId = undefined;
-                    await room.save();
-                }
+                // Remove the player from the room
+                room.players = room.players.filter(p => p.userId !== userId);
 
-                io.to(roomId).emit('lobby:playerLeft', { roomId, playerId: socket.userId });
+                if (room.players.length === 0) {
+                    // Delete empty room
+                    await room.deleteOne();
+                    io.emit('lobby:roomDeleted', roomId);
+                    console.log(`🗑️ Room deleted (empty): ${room.name}`);
+                } else {
+                    // Update host if needed
+                    if (room.hostId === userId && room.players.length > 0) {
+                        room.hostId = room.players[0].userId;
+                    }
+                    await room.save();
+
+                    // Notify remaining players
+                    io.to(roomId).emit('lobby:playerLeft', { roomId, playerId: userId });
+                    io.emit('lobby:roomUpdated', mongoRoomToClientFormat(room));
+                    console.log(`👋 Player ${userId} left room: ${room.name}`);
+                }
             } else {
                 // In-memory demo mode
                 const room = inMemoryRooms.get(roomId);
                 if (!room) return;
 
-                const player = room.players.find(p => p.userId === socket.userId);
-                if (player) {
-                    player.isConnected = false;
-                    player.socketId = undefined;
-                }
+                // Remove the player from the room
+                room.players = room.players.filter(p => p.userId !== userId);
 
-                io.to(roomId).emit('lobby:playerLeft', { roomId, playerId: socket.userId });
+                if (room.players.length === 0) {
+                    // Delete empty room
+                    inMemoryRooms.delete(roomId);
+                    io.emit('lobby:roomDeleted', roomId);
+                    console.log(`🗑️ Room deleted (empty - demo): ${room.name}`);
+                } else {
+                    // Update host if needed
+                    if (room.hostId === userId && room.players.length > 0) {
+                        room.hostId = room.players[0].userId;
+                    }
+
+                    // Notify remaining players
+                    io.to(roomId).emit('lobby:playerLeft', { roomId, playerId: userId });
+                    io.emit('lobby:roomUpdated', roomToClientFormat(room));
+                    console.log(`👋 Player ${userId} left room (demo): ${room.name}`);
+                }
             }
         } catch (error) {
             console.error('Disconnect handler error:', error);
@@ -445,4 +472,52 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
 // Export for game handler
 export function getInMemoryRoom(roomId: string) {
     return inMemoryRooms.get(roomId);
+}
+
+// Cleanup user from any rooms they might be in (called on reconnection)
+export async function cleanupUserRooms(userId: string, io: Server) {
+    try {
+        if (isDatabaseConnected()) {
+            // Find and remove user from any rooms they're in
+            const rooms = await Room.find({ 'players.userId': userId });
+            for (const room of rooms) {
+                room.players = room.players.filter(p => p.userId !== userId);
+
+                if (room.players.length === 0) {
+                    await room.deleteOne();
+                    io.emit('lobby:roomDeleted', room._id.toString());
+                    console.log(`🧹 Cleaned up empty room: ${room.name}`);
+                } else {
+                    if (room.hostId === userId) {
+                        room.hostId = room.players[0].userId;
+                    }
+                    await room.save();
+                    io.emit('lobby:roomUpdated', mongoRoomToClientFormat(room));
+                    console.log(`🧹 Cleaned up stale player from room: ${room.name}`);
+                }
+            }
+        } else {
+            // In-memory mode cleanup
+            for (const [roomId, room] of inMemoryRooms.entries()) {
+                const playerIndex = room.players.findIndex(p => p.userId === userId);
+                if (playerIndex !== -1) {
+                    room.players.splice(playerIndex, 1);
+
+                    if (room.players.length === 0) {
+                        inMemoryRooms.delete(roomId);
+                        io.emit('lobby:roomDeleted', roomId);
+                        console.log(`🧹 Cleaned up empty room (demo): ${room.name}`);
+                    } else {
+                        if (room.hostId === userId) {
+                            room.hostId = room.players[0].userId;
+                        }
+                        io.emit('lobby:roomUpdated', roomToClientFormat(room));
+                        console.log(`🧹 Cleaned up stale player from room (demo): ${room.name}`);
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Cleanup user rooms error:', error);
+    }
 }
