@@ -92,7 +92,6 @@ function AppContent() {
       if (currentRoom.gameType === 'poker') {
         return (
           <PokerGame
-            roomId={currentRoom.id}
             onLeave={handleLeaveRoom}
           />
         );

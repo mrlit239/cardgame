@@ -5,7 +5,6 @@ import type { Card } from '../../../../shared/types/card';
 import './Poker.css';
 
 interface PokerGameProps {
-    roomId: string;
     onLeave: () => void;
 }
 
@@ -32,7 +31,7 @@ function CardDisplay({ card, hidden = false }: { card: Card; hidden?: boolean })
     );
 }
 
-export function PokerGame({ roomId, onLeave }: PokerGameProps) {
+export function PokerGame({ onLeave }: PokerGameProps) {
     const { user, socket } = useAuth();
     const [gameState, setGameState] = useState<PokerState | null>(null);
     const [error, setError] = useState('');
