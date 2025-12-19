@@ -13,9 +13,17 @@ async function main() {
     // Create Express app
     const app = express();
 
+    // Allowed origins for CORS
+    const allowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'https://cardgame-phom.netlify.app',
+        config.clientUrl,
+    ].filter(Boolean);
+
     // Middleware
     app.use(cors({
-        origin: config.clientUrl,
+        origin: allowedOrigins,
         credentials: true,
     }));
     app.use(express.json());
@@ -31,7 +39,7 @@ async function main() {
     // Create Socket.IO server
     const io = new Server(httpServer, {
         cors: {
-            origin: config.clientUrl,
+            origin: allowedOrigins,
             methods: ['GET', 'POST'],
             credentials: true,
         },
