@@ -46,6 +46,29 @@ function roomToClientFormat(room: InMemoryRoom) {
     };
 }
 
+// Helper to convert MongoDB room to client format
+function mongoRoomToClientFormat(room: any) {
+    const roomObj = room.toObject ? room.toObject() : room;
+    return {
+        id: roomObj._id?.toString() || roomObj.id,
+        _id: roomObj._id?.toString() || roomObj.id,
+        name: roomObj.name,
+        gameType: roomObj.gameType,
+        hostId: roomObj.hostId,
+        maxPlayers: roomObj.maxPlayers,
+        players: roomObj.players.map((p: any) => ({
+            id: p.userId || p.id,
+            username: p.username,
+            hand: [],
+            isReady: p.isReady || false,
+            isConnected: p.isConnected !== false,
+            score: 0,
+        })),
+        status: roomObj.status,
+        createdAt: roomObj.createdAt,
+    };
+}
+
 export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
     // Get all available rooms
     socket.on('lobby:getRooms', async (callback) => {
@@ -55,7 +78,7 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                     .select('-gameState')
                     .sort({ createdAt: -1 })
                     .limit(50);
-                callback(rooms);
+                callback(rooms.map(mongoRoomToClientFormat));
             } else {
                 // In-memory demo mode
                 const rooms = Array.from(inMemoryRooms.values())
@@ -109,8 +132,8 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                 socket.join(room._id.toString());
                 socket.currentRoomId = room._id.toString();
 
-                callback({ success: true, room: room.toObject() });
-                io.emit('lobby:roomCreated', room.toObject());
+                callback({ success: true, room: mongoRoomToClientFormat(room) });
+                io.emit('lobby:roomCreated', mongoRoomToClientFormat(room));
 
                 console.log(`✅ Room created (DB): ${room.name} by ${socket.username}`);
             } else {
@@ -186,13 +209,13 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                 socket.join(roomId);
                 socket.currentRoomId = roomId;
 
-                callback({ success: true, room: room.toObject() });
+                callback({ success: true, room: mongoRoomToClientFormat(room) });
 
                 io.to(roomId).emit('lobby:playerJoined', {
                     roomId,
                     player: { id: socket.userId, username: socket.username }
                 });
-                io.emit('lobby:roomUpdated', room.toObject());
+                io.emit('lobby:roomUpdated', mongoRoomToClientFormat(room));
             } else {
                 // In-memory demo mode
                 const room = inMemoryRooms.get(roomId);
@@ -260,7 +283,7 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                         room.hostId = room.players[0].userId;
                     }
                     await room.save();
-                    io.emit('lobby:roomUpdated', room.toObject());
+                    io.emit('lobby:roomUpdated', mongoRoomToClientFormat(room));
                 }
 
                 io.to(roomId).emit('lobby:playerLeft', { roomId, playerId: socket.userId });
