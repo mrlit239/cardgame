@@ -8,7 +8,7 @@ interface LobbyProps {
 }
 
 export function Lobby({ onJoinGame }: LobbyProps) {
-    const { user, socket, logout } = useAuth();
+    const { user, socket, logout, credits } = useAuth();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedGameType, setSelectedGameType] = useState<GameType>('phom');
@@ -87,6 +87,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                     <h1>Card Games</h1>
                 </div>
                 <div className="lobby-user">
+                    <span className="user-credits">💰 {credits.toLocaleString()}</span>
                     <span className="user-name">{user?.username}</span>
                     <button className="btn btn-secondary" onClick={logout}>
                         Logout

@@ -45,6 +45,15 @@
     color: var(--text-secondary);
 }
 
+.user-credits {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+    color: #000;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
 /* Game Selection */
 .game-selection {
     margin-bottom: var(--spacing-xl);

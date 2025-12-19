@@ -22,9 +22,34 @@ interface InMemoryUser {
     id: string;
     username: string;
     passwordHash: string;
+    credits: number;
 }
 const inMemoryUsers: Map<string, InMemoryUser> = new Map();
 let userIdCounter = 1;
+
+const STARTING_CREDITS = 1000;
+
+// Export function to get user credits
+export function getUserCredits(userId: string): number {
+    const user = inMemoryUsers.get(userId);
+    return user?.credits ?? STARTING_CREDITS;
+}
+
+// Export function to update user credits
+export function updateUserCredits(userId: string, amount: number): { success: boolean; newBalance: number } {
+    const user = inMemoryUsers.get(userId);
+    if (!user) {
+        return { success: false, newBalance: 0 };
+    }
+
+    const newBalance = user.credits + amount;
+    if (newBalance < 0) {
+        return { success: false, newBalance: user.credits };
+    }
+
+    user.credits = newBalance;
+    return { success: true, newBalance };
+}
 
 export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
     // Register new user
@@ -68,7 +93,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
 
                 const id = `demo_${userIdCounter++}`;
                 const passwordHash = await bcrypt.hash(password, 10);
-                inMemoryUsers.set(id, { id, username, passwordHash });
+                inMemoryUsers.set(id, { id, username, passwordHash, credits: STARTING_CREDITS });
 
                 const token = jwt.sign(
                     { userId: id, username },
@@ -84,6 +109,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
                     userId: id,
                     username,
                     token,
+                    credits: STARTING_CREDITS,
                 });
 
                 console.log(`✅ User registered (Demo): ${username}`);
@@ -154,6 +180,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
                     userId: user.id,
                     username: user.username,
                     token,
+                    credits: user.credits,
                 });
 
                 console.log(`✅ User logged in (Demo): ${username}`);
@@ -201,6 +228,15 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
         socket.username = undefined;
         socket.currentRoomId = undefined;
         console.log('User logged out');
+    });
+
+    // Get user credits
+    socket.on('credits:get', (callback: (response: { success: boolean; credits?: number }) => void) => {
+        if (!socket.userId) {
+            return callback({ success: false });
+        }
+        const credits = getUserCredits(socket.userId);
+        callback({ success: true, credits });
     });
 }
 

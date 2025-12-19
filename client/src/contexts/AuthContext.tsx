@@ -6,6 +6,7 @@ interface User {
     id: string;
     username: string;
     token: string;
+    credits: number;
 }
 
 interface AuthContextType {
@@ -13,9 +14,11 @@ interface AuthContextType {
     socket: TypedSocket | null;
     isLoading: boolean;
     isConnected: boolean;
+    credits: number;
     login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
     register: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
     logout: () => void;
+    refreshCredits: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -25,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [socket, setSocket] = useState<TypedSocket | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isConnected, setIsConnected] = useState(false);
+    const [credits, setCredits] = useState(1000);
 
     useEffect(() => {
         const newSocket = socketService.connect();
@@ -92,8 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         id: response.userId,
                         username: response.username,
                         token: response.token,
+                        credits: (response as unknown as { credits?: number }).credits || 1000,
                     };
                     setUser(newUser);
+                    setCredits(newUser.credits);
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('user', JSON.stringify(newUser));
                     resolve({ success: true });
@@ -117,8 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         id: response.userId,
                         username: response.username,
                         token: response.token,
+                        credits: (response as unknown as { credits?: number }).credits || 1000,
                     };
                     setUser(newUser);
+                    setCredits(newUser.credits);
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('user', JSON.stringify(newUser));
                     resolve({ success: true });
@@ -134,12 +142,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             socket.emit('auth:logout');
         }
         setUser(null);
+        setCredits(1000);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
     }, [socket]);
 
+    const refreshCredits = useCallback(() => {
+        if (!socket) return;
+        (socket as unknown as { emit: (event: string, callback: (response: { success: boolean; credits?: number }) => void) => void }).emit('credits:get', (response) => {
+            if (response.success && response.credits !== undefined) {
+                setCredits(response.credits);
+            }
+        });
+    }, [socket]);
+
     return (
-        <AuthContext.Provider value={{ user, socket, isLoading, isConnected, login, register, logout }}>
+        <AuthContext.Provider value={{ user, socket, isLoading, isConnected, credits, login, register, logout, refreshCredits }}>
             {children}
         </AuthContext.Provider>
     );
