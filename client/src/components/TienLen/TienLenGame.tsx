@@ -35,59 +35,60 @@ interface TienLenState {
     myHand: Card[];
 }
 
-const RANK_NAMES: Record<number, string> = {
-    2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10',
-    11: 'J', 12: 'Q', 13: 'K', 14: 'A'
+// STEALTH MODE: Disguise as IT/Agile tool
+const TICKET_IDS: Record<number, string> = {
+    3: 'TKT-301', 4: 'TKT-402', 5: 'TKT-503', 6: 'TKT-604',
+    7: 'TKT-705', 8: 'TKT-806', 9: 'TKT-907', 10: 'TKT-108',
+    11: 'TKT-111', 12: 'TKT-212', 13: 'TKT-313', 14: 'TKT-414', 2: 'TKT-002'
 };
 
-const SUIT_SYMBOLS: Record<string, string> = {
-    hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠'
+const PRIORITY_NAMES: Record<string, { name: string; color: string; icon: string }> = {
+    hearts: { name: 'Critical', color: '#ef4444', icon: '🔴' },
+    diamonds: { name: 'High', color: '#f97316', icon: '🟠' },
+    clubs: { name: 'Medium', color: '#eab308', icon: '🟡' },
+    spades: { name: 'Low', color: '#22c55e', icon: '🟢' }
 };
 
-const COMBINATION_NAMES: Record<string, string> = {
-    single: 'Rác',
-    pair: 'Đôi',
-    triple: 'Sám',
-    fourOfAKind: 'Tứ Quý',
-    sequence: 'Sảnh',
-    pairSequence: 'Đôi Thông'
+const COMBO_WORK_NAMES: Record<string, string> = {
+    single: 'Single Task',
+    pair: 'Task Pair',
+    triple: 'Task Group',
+    fourOfAKind: 'Sprint Bundle',
+    sequence: 'Release Chain',
+    pairSequence: 'Epic Link'
 };
 
-function PlayCard({ card, selected, onClick, small }: { card: Card; selected?: boolean; onClick?: () => void; small?: boolean }) {
-    const isRed = card.suit === 'hearts' || card.suit === 'diamonds';
+function TicketCard({ card, selected, onClick, small }: { card: Card; selected?: boolean; onClick?: () => void; small?: boolean }) {
+    const priority = PRIORITY_NAMES[card.suit];
+    const ticketId = TICKET_IDS[card.rank];
+
     return (
         <div
-            className={`tl-card ${isRed ? 'red' : 'black'} ${selected ? 'selected' : ''} ${small ? 'small' : ''}`}
+            className={`ticket-card ${selected ? 'selected' : ''} ${small ? 'small' : ''}`}
             onClick={onClick}
+            style={{ borderLeftColor: priority.color }}
         >
-            <div className="card-corner top-left">
-                <span className="rank">{RANK_NAMES[card.rank]}</span>
-                <span className="suit">{SUIT_SYMBOLS[card.suit]}</span>
+            <div className="ticket-header">
+                <span className="ticket-id">{ticketId}</span>
+                <span className="ticket-priority" style={{ background: priority.color }}>
+                    {priority.name}
+                </span>
             </div>
-            <div className="card-center">
-                <span className="big-suit">{SUIT_SYMBOLS[card.suit]}</span>
+            <div className="ticket-body">
+                <span className="ticket-points">{card.rank === 2 ? '∞' : card.rank} SP</span>
             </div>
-            <div className="card-corner bottom-right">
-                <span className="rank">{RANK_NAMES[card.rank]}</span>
-                <span className="suit">{SUIT_SYMBOLS[card.suit]}</span>
+            <div className="ticket-footer">
+                <span className="ticket-status">{priority.icon} Ready</span>
             </div>
         </div>
     );
 }
 
-function CardBack({ count }: { count: number }) {
+function TaskStack({ count }: { count: number }) {
     return (
-        <div className="card-back-stack">
-            {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
-                <div
-                    key={i}
-                    className="tl-card-back"
-                    style={{ transform: `translateX(${i * 3}px) translateY(${i * -2}px)` }}
-                >
-                    <div className="card-back-pattern">🂠</div>
-                </div>
-            ))}
-            <span className="card-count">{count}</span>
+        <div className="task-stack">
+            <div className="stack-icon">📋</div>
+            <span className="stack-count">{count} tasks</span>
         </div>
     );
 }
@@ -115,11 +116,11 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
         };
 
         const handleGameOver = (data: { winners: string[] }) => {
-            console.log('Game over! Winners:', data.winners);
+            console.log('Sprint complete! Top performers:', data.winners);
         };
 
         const handlePlayerLeft = () => {
-            setError('A player left the game');
+            setError('A team member disconnected');
         };
 
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:stateUpdate', handleStateUpdate as (...args: unknown[]) => void);
@@ -127,7 +128,7 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:gameOver', handleGameOver as (...args: unknown[]) => void);
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:playerLeft', handlePlayerLeft as (...args: unknown[]) => void);
 
-        // Request current state in case we missed the initial broadcast
+        // Request current state
         (socket as unknown as { emit: (event: string, callback: (response: { success: boolean; state?: TienLenState }) => void) => void }).emit('tienlen:getState', (response) => {
             if (response.success && response.state) {
                 handleStateUpdate(response.state);
@@ -148,7 +149,7 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
         (socket as unknown as { emit: (event: string, data: unknown, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('tienlen:start', { variant }, (response) => {
             setIsStarting(false);
             if (!response.success) {
-                setError(response.message || 'Failed to start game');
+                setError(response.message || 'Failed to start session');
                 setTimeout(() => setError(''), 3000);
             }
         });
@@ -158,7 +159,7 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
         if (!socket || selectedCards.length === 0) return;
         (socket as unknown as { emit: (event: string, data: unknown, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('tienlen:play', { cardIds: selectedCards }, (response) => {
             if (!response.success) {
-                setError(response.message || 'Invalid play');
+                setError(response.message || 'Invalid assignment');
                 setTimeout(() => setError(''), 3000);
             }
         });
@@ -168,7 +169,7 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
         if (!socket) return;
         (socket as unknown as { emit: (event: string, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('tienlen:pass', (response) => {
             if (!response.success) {
-                setError(response.message || 'Cannot pass');
+                setError(response.message || 'Cannot skip');
                 setTimeout(() => setError(''), 3000);
             }
         });
@@ -198,94 +199,77 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
     const canPass = isMyTurn && gameState?.lastPlay && gameState.lastPlayerId !== user?.id;
     const currentPlayer = gameState?.players[gameState.currentPlayerIndex];
 
-    // Pre-game settings screen (HOST ONLY can start)
+    // Settings screen - disguised as Sprint Setup
     if (!gameStarted) {
         return (
-            <div className="tl-container">
-                <div className="tl-header">
-                    <button className="btn btn-secondary" onClick={handleLeave}>← Thoát</button>
-                    <h2>🃏 Tiến Lên</h2>
-                    <div></div>
+            <div className="sprint-container">
+                <div className="sprint-header">
+                    <button className="btn-link" onClick={handleLeave}>← Back to Dashboard</button>
+                    <h2>📊 Sprint Planning Session</h2>
+                    <span className="session-id">Session #{Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
                 </div>
-                <div className="tl-settings">
-                    <h3>Chọn Kiểu Chơi</h3>
+                <div className="sprint-setup">
+                    <h3>Configure Estimation Method</h3>
 
                     {isHost ? (
                         <>
-                            <div className="variant-selector">
+                            <div className="method-selector">
                                 <button
-                                    className={`variant-card ${variant === 'south' ? 'active' : ''}`}
+                                    className={`method-card ${variant === 'south' ? 'active' : ''}`}
                                     onClick={() => setVariant('south')}
                                 >
-                                    <span className="variant-icon">🌴</span>
-                                    <span className="variant-name">Miền Nam</span>
-                                    <span className="variant-desc">
-                                        Có chặt heo: Tứ Quý, Đôi Thông chặt được Heo
+                                    <span className="method-icon">🎯</span>
+                                    <span className="method-name">Flex Scoring</span>
+                                    <span className="method-desc">
+                                        Allows sprint bundles and epic links to override blockers
                                     </span>
                                 </button>
                                 <button
-                                    className={`variant-card ${variant === 'north' ? 'active' : ''}`}
+                                    className={`method-card ${variant === 'north' ? 'active' : ''}`}
                                     onClick={() => setVariant('north')}
                                 >
-                                    <span className="variant-icon">🏔️</span>
-                                    <span className="variant-name">Miền Bắc</span>
-                                    <span className="variant-desc">
-                                        Phải cùng chất/màu: Đơn cùng chất, Đôi cùng màu
+                                    <span className="method-icon">📏</span>
+                                    <span className="method-name">Strict Mode</span>
+                                    <span className="method-desc">
+                                        Priority matching required. Same category only.
                                     </span>
                                 </button>
-                            </div>
-
-                            <div className="rules-summary">
-                                {variant === 'south' ? (
-                                    <ul>
-                                        <li>Tứ Quý chặt được 1 Heo, Đôi Heo</li>
-                                        <li>3 Đôi Thông chặt được 1 Heo</li>
-                                        <li>4 Đôi Thông chặt được Đôi Heo, Tứ Quý</li>
-                                    </ul>
-                                ) : (
-                                    <ul>
-                                        <li>Đánh đơn phải cùng chất (♠→♠, ♥→♥)</li>
-                                        <li>Đánh đôi phải cùng màu (đỏ/đen)</li>
-                                        <li>Sảnh phải cùng chất</li>
-                                        <li>Không có Tứ Quý, Đôi Thông</li>
-                                    </ul>
-                                )}
                             </div>
 
                             <button
-                                className="btn btn-primary btn-large"
+                                className="btn-primary btn-large"
                                 onClick={startGame}
                                 disabled={isStarting}
                             >
-                                {isStarting ? 'Đang bắt đầu...' : '🎮 Bắt Đầu'}
+                                {isStarting ? 'Initializing...' : '▶ Start Planning Session'}
                             </button>
                         </>
                     ) : (
-                        <div className="waiting-for-host">
+                        <div className="waiting-host">
                             <div className="spinner"></div>
-                            <p>Đang chờ Host bắt đầu game...</p>
-                            <p className="hint">Host sẽ chọn luật chơi (Miền Nam hoặc Miền Bắc)</p>
+                            <p>Waiting for Scrum Master to configure session...</p>
+                            <p className="hint">The host will select the estimation method</p>
                         </div>
                     )}
 
-                    {error && <div className="tl-error">{error}</div>}
+                    {error && <div className="error-toast">{error}</div>}
                 </div>
             </div>
         );
     }
 
-    // Loading state
+    // Loading
     if (!gameState) {
         return (
-            <div className="tl-container">
-                <div className="tl-header">
-                    <button className="btn btn-secondary" onClick={handleLeave}>← Thoát</button>
-                    <h2>🃏 Tiến Lên</h2>
+            <div className="sprint-container">
+                <div className="sprint-header">
+                    <button className="btn-link" onClick={handleLeave}>← Back to Dashboard</button>
+                    <h2>📊 Sprint Planning Session</h2>
                     <div></div>
                 </div>
-                <div className="tl-loading">
+                <div className="loading-state">
                     <div className="spinner"></div>
-                    <p>Đang tải game...</p>
+                    <p>Loading backlog items...</p>
                 </div>
             </div>
         );
@@ -294,100 +278,94 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
     const otherPlayers = getOtherPlayers();
 
     return (
-        <div className="tl-container">
-            {/* Header */}
-            <div className="tl-header">
-                <button className="btn btn-secondary" onClick={handleLeave}>← Thoát</button>
-                <div className="game-info">
-                    <span className="variant-badge">{variant === 'south' ? '🌴 Miền Nam' : '🏔️ Miền Bắc'}</span>
+        <div className="sprint-container">
+            {/* Header - looks like project tool header */}
+            <div className="sprint-header">
+                <button className="btn-link" onClick={handleLeave}>← Dashboard</button>
+                <div className="sprint-info">
+                    <span className="sprint-badge">{variant === 'south' ? '🎯 Flex' : '📏 Strict'}</span>
+                    <span className="sprint-name">Sprint Planning</span>
                 </div>
-                <div className="turn-info">
+                <div className="turn-indicator">
                     {isMyTurn ? (
-                        <span className="your-turn">🎯 Lượt của bạn</span>
+                        <span className="your-turn">📍 Your estimate needed</span>
                     ) : (
-                        <span>Đang chờ {currentPlayer?.username}...</span>
+                        <span>⏳ Waiting for {currentPlayer?.username}...</span>
                     )}
                 </div>
             </div>
 
-            {error && <div className="tl-error">{error}</div>}
+            {error && <div className="error-toast">{error}</div>}
 
-            {/* Game Over */}
+            {/* Sprint Complete Modal */}
             {gameState.phase === 'ended' && (
-                <div className="game-over-overlay">
-                    <div className="game-over-modal">
-                        <h2>🎉 Kết Thúc!</h2>
-                        <div className="final-rankings">
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h2>🎉 Sprint Planning Complete!</h2>
+                        <div className="results-list">
                             {gameState.winners.map((id, idx) => {
                                 const player = gameState.players.find(p => p.id === id);
                                 return (
-                                    <div key={id} className={`final-rank rank-${idx + 1}`}>
-                                        <span className="position">
-                                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`}
-                                        </span>
+                                    <div key={id} className={`result-row ${idx === 0 ? 'top-performer' : ''}`}>
+                                        <span className="rank">#{idx + 1}</span>
                                         <span className="name">{player?.username}</span>
+                                        <span className="badge">{idx === 0 ? '⭐ Top Performer' : 'Done'}</span>
                                     </div>
                                 );
                             })}
                         </div>
-                        <button className="btn btn-primary" onClick={handleLeave}>Về Sảnh</button>
+                        <button className="btn-primary" onClick={handleLeave}>Back to Dashboard</button>
                     </div>
                 </div>
             )}
 
-            {/* Play Table */}
-            <div className="tl-table">
-                {/* Other Players */}
-                <div className="table-players">
-                    {otherPlayers.map((player, index) => {
+            {/* Main Board - looks like Kanban/Sprint board */}
+            <div className="planning-board">
+                {/* Team Members Panel */}
+                <div className="team-panel">
+                    <h4>👥 Team Members</h4>
+                    {otherPlayers.map((player) => {
                         const isTheirTurn = gameState.players[gameState.currentPlayerIndex]?.id === player.id;
-                        const position = otherPlayers.length === 1 ? 'top'
-                            : otherPlayers.length === 2 ? (index === 0 ? 'left' : 'right')
-                                : (index === 0 ? 'left' : index === 1 ? 'top' : 'right');
-
                         return (
-                            <div key={player.id} className={`table-player ${position} ${isTheirTurn ? 'active' : ''} ${player.hasPassed ? 'passed' : ''} ${player.isOut ? 'out' : ''}`}>
-                                <div className="player-seat">
-                                    <div className="player-avatar">
-                                        {player.username.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="player-details">
-                                        <span className="player-name">{player.username}</span>
-                                        {player.isOut ? (
-                                            <span className="player-status finished">✓ Thắng</span>
-                                        ) : player.hasPassed ? (
-                                            <span className="player-status passed">Bỏ lượt</span>
-                                        ) : (
-                                            <CardBack count={player.cardCount} />
-                                        )}
-                                    </div>
+                            <div key={player.id} className={`team-member ${isTheirTurn ? 'active' : ''} ${player.hasPassed ? 'away' : ''} ${player.isOut ? 'done' : ''}`}>
+                                <div className="member-avatar">{player.username.charAt(0).toUpperCase()}</div>
+                                <div className="member-info">
+                                    <span className="member-name">{player.username}</span>
+                                    {player.isOut ? (
+                                        <span className="member-status done">✓ Completed</span>
+                                    ) : player.hasPassed ? (
+                                        <span className="member-status away">Skipped</span>
+                                    ) : (
+                                        <TaskStack count={player.cardCount} />
+                                    )}
                                 </div>
                             </div>
                         );
                     })}
                 </div>
 
-                {/* Center Play Area */}
-                <div className="table-center">
-                    <div className="play-surface">
+                {/* Central Board Area */}
+                <div className="board-center">
+                    <div className="current-review">
+                        <h4>📋 Current Review</h4>
                         {gameState.lastPlay ? (
-                            <div className="last-played">
-                                <div className="played-by">
-                                    {gameState.players.find(p => p.id === gameState.lastPlayerId)?.username}
-                                    <span className="combo-type">{COMBINATION_NAMES[gameState.lastPlay.type] || gameState.lastPlay.type}</span>
+                            <div className="reviewed-items">
+                                <div className="reviewer">
+                                    Submitted by: {gameState.players.find(p => p.id === gameState.lastPlayerId)?.username}
+                                    <span className="combo-tag">{COMBO_WORK_NAMES[gameState.lastPlay.type] || gameState.lastPlay.type}</span>
                                 </div>
-                                <div className="played-cards">
+                                <div className="reviewed-cards">
                                     {gameState.lastPlay.cards.map((card, i) => (
-                                        <PlayCard key={i} card={card} small />
+                                        <TicketCard key={i} card={card} small />
                                     ))}
                                 </div>
                             </div>
                         ) : (
-                            <div className="empty-table">
+                            <div className="empty-review">
                                 {gameState.isFirstTurn ? (
-                                    <span>Lượt đầu - Phải có 3♠</span>
+                                    <span>Start with TKT-301 (Low Priority)</span>
                                 ) : (
-                                    <span>Vòng mới - Đánh bất kỳ</span>
+                                    <span>Submit any task group</span>
                                 )}
                             </div>
                         )}
@@ -395,19 +373,19 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
                 </div>
             </div>
 
-            {/* My Hand */}
-            <div className="my-section">
-                <div className="my-hand-header">
-                    <span className="hand-label">Bài của bạn ({gameState.myHand.length})</span>
+            {/* My Backlog - bottom section */}
+            <div className="my-backlog">
+                <div className="backlog-header">
+                    <h4>📥 My Backlog ({gameState.myHand.length} items)</h4>
                     {selectedCards.length > 0 && (
-                        <button className="btn-clear" onClick={() => setSelectedCards([])}>
-                            Bỏ chọn ({selectedCards.length})
+                        <button className="btn-text" onClick={() => setSelectedCards([])}>
+                            Clear selection ({selectedCards.length})
                         </button>
                     )}
                 </div>
-                <div className="my-hand">
+                <div className="backlog-items">
                     {gameState.myHand.map(card => (
-                        <PlayCard
+                        <TicketCard
                             key={card.id}
                             card={card}
                             selected={selectedCards.includes(card.id)}
@@ -416,22 +394,22 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
                     ))}
                 </div>
 
-                {/* Controls */}
+                {/* Action Bar */}
                 {isMyTurn && gameState.phase === 'playing' && (
                     <div className="action-bar">
                         <button
-                            className="btn btn-danger"
+                            className="btn-secondary"
                             onClick={pass}
                             disabled={!canPass}
                         >
-                            Bỏ Lượt
+                            Skip Round
                         </button>
                         <button
-                            className="btn btn-success btn-large"
+                            className="btn-primary"
                             onClick={playCards}
                             disabled={selectedCards.length === 0}
                         >
-                            Đánh ({selectedCards.length} lá)
+                            Submit ({selectedCards.length} items)
                         </button>
                     </div>
                 )}
