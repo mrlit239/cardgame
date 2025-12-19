@@ -49,6 +49,29 @@ function getCardValue(card: Card): number {
     return card.rank;
 }
 
+// Suit value for Miền Nam: Spades < Clubs < Diamonds < Hearts
+// ♠=0, ♣=1, ♦=2, ♥=3
+function getSuitValue(suit: Suit): number {
+    const suitOrder: Record<Suit, number> = {
+        'spades': 0,
+        'clubs': 1,
+        'diamonds': 2,
+        'hearts': 3
+    };
+    return suitOrder[suit];
+}
+
+// Compare two cards - returns positive if a > b, negative if a < b, 0 if equal
+// For Miền Nam: compare by value first, then by suit
+function compareCards(a: Card, b: Card, useSuit: boolean): number {
+    const valueDiff = getCardValue(a) - getCardValue(b);
+    if (valueDiff !== 0) return valueDiff;
+    if (useSuit) {
+        return getSuitValue(a.suit) - getSuitValue(b.suit);
+    }
+    return 0;
+}
+
 // Get color: red (hearts, diamonds) or black (spades, clubs)
 function getCardColor(card: Card): 'red' | 'black' {
     return (card.suit === 'hearts' || card.suit === 'diamonds') ? 'red' : 'black';
@@ -266,7 +289,9 @@ function canBeat(
     const newHighest = getHighestCard(newCards);
     const lastHighest = getHighestCard(lastPlay.cards);
 
-    return getCardValue(newHighest) > getCardValue(lastHighest);
+    // For Miền Nam: if same rank, use suit to determine winner
+    // For Miền Bắc: only compare rank (suit already validated)
+    return compareCards(newHighest, lastHighest, variant === 'south') > 0;
 }
 
 // ============ GAME ENGINE ============
