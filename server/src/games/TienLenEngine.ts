@@ -29,6 +29,22 @@ export interface PlayedCombination {
     playerId: string;
 }
 
+export interface PlayerResult {
+    playerId: string;
+    username: string;
+    position: number;      // 1st, 2nd, 3rd, 4th
+    cardsLeft: number;
+    penalties: {
+        hasHeo: boolean;      // Còn 1 heo
+        hasDoubleHeo: boolean; // Còn đôi heo
+        hasFourOfKind: boolean; // Còn tứ quý
+        hasPairSequence: boolean; // Còn đôi thông
+        isCong: boolean;      // Chưa đánh được lá nào
+    };
+    penaltyMultiplier: number; // Total penalty multiplier
+    creditsChange: number;     // Credits won/lost
+}
+
 export interface TienLenState {
     players: TienLenPlayer[];
     currentPlayerIndex: number;
@@ -38,6 +54,7 @@ export interface TienLenState {
     winners: string[];
     phase: 'waiting' | 'playing' | 'ended';
     variant: TienLenVariant;
+    gameResults?: PlayerResult[]; // Final results with penalties
 }
 
 // ============ CARD UTILITIES ============
@@ -460,6 +477,7 @@ export class TienLenEngine {
                     this.state.winners.push(remaining[0].id);
                 }
                 this.state.phase = 'ended';
+                this.state.gameResults = this.calculateGameResults();
                 return { success: true };
             }
         }
@@ -561,5 +579,104 @@ export class TienLenEngine {
             } while (this.state.players[next].isOut);
             this.state.currentPlayerIndex = next;
         }
+    }
+
+    // Calculate game results with penalties (Miền Nam only)
+    private calculateGameResults(): PlayerResult[] {
+        const BASE_CREDITS = 100; // Base credits per game
+        const results: PlayerResult[] = [];
+
+        for (let i = 0; i < this.state.players.length; i++) {
+            const player = this.state.players[i];
+            const winnerIndex = this.state.winners.indexOf(player.id);
+            const position = winnerIndex !== -1 ? winnerIndex + 1 : this.state.winners.length + 1;
+            const hand = player.hand;
+
+            // Calculate penalties for remaining cards
+            const penalties = {
+                hasHeo: false,
+                hasDoubleHeo: false,
+                hasFourOfKind: false,
+                hasPairSequence: false,
+                isCong: false
+            };
+
+            if (hand.length > 0 && this.config.variant === 'south') {
+                // Check for Heo (2s)
+                const heos = hand.filter(c => c.rank === 2);
+                penalties.hasHeo = heos.length >= 1;
+                penalties.hasDoubleHeo = heos.length >= 2;
+
+                // Check for Tứ Quý (4 of same rank)
+                const rankCounts = new Map<number, number>();
+                for (const card of hand) {
+                    rankCounts.set(card.rank, (rankCounts.get(card.rank) || 0) + 1);
+                }
+                penalties.hasFourOfKind = Array.from(rankCounts.values()).some(count => count >= 4);
+
+                // Check for Đôi Thông (3+ consecutive pairs)
+                // Simplified check - look for 6+ cards that could form đôi thông
+                if (hand.length >= 6) {
+                    const pairs: number[] = [];
+                    for (const [rank, count] of rankCounts.entries()) {
+                        if (count >= 2 && rank !== 2) { // Not 2s
+                            pairs.push(rank);
+                        }
+                    }
+                    pairs.sort((a, b) => a - b);
+                    // Check for 3+ consecutive pairs
+                    let consecutive = 1;
+                    for (let j = 1; j < pairs.length; j++) {
+                        if (pairs[j] - pairs[j - 1] === 1) {
+                            consecutive++;
+                            if (consecutive >= 3) {
+                                penalties.hasPairSequence = true;
+                                break;
+                            }
+                        } else {
+                            consecutive = 1;
+                        }
+                    }
+                }
+
+                // Check for Cóng (never played any card)
+                penalties.isCong = !player.hasPlayedAnyCard;
+            }
+
+            // Calculate penalty multiplier
+            let penaltyMultiplier = 1;
+            if (this.config.variant === 'south') {
+                if (penalties.isCong) penaltyMultiplier += 2; // Cóng: 3x penalty
+                if (penalties.hasDoubleHeo) penaltyMultiplier += 1; // Đôi Heo: 2x extra
+                else if (penalties.hasHeo) penaltyMultiplier += 0.5; // 1 Heo: 1.5x
+                if (penalties.hasFourOfKind) penaltyMultiplier += 1; // Tứ Quý: 2x extra
+                if (penalties.hasPairSequence) penaltyMultiplier += 1; // Đôi Thông: 2x extra
+            }
+
+            // Calculate credits change
+            let creditsChange = 0;
+            if (position === 1) {
+                // Winner gets base credits * number of other players
+                creditsChange = BASE_CREDITS * (this.state.players.length - 1);
+            } else {
+                // Losers lose credits based on position and penalties
+                creditsChange = -BASE_CREDITS * penaltyMultiplier;
+            }
+
+            results.push({
+                playerId: player.id,
+                username: player.username,
+                position,
+                cardsLeft: hand.length,
+                penalties,
+                penaltyMultiplier,
+                creditsChange
+            });
+        }
+
+        // Sort by position
+        results.sort((a, b) => a.position - b.position);
+
+        return results;
     }
 }

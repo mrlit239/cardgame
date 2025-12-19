@@ -127,6 +127,13 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:gameOver', handleGameOver as (...args: unknown[]) => void);
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:playerLeft', handlePlayerLeft as (...args: unknown[]) => void);
 
+        // Request current state in case we missed the initial broadcast
+        (socket as unknown as { emit: (event: string, callback: (response: { success: boolean; state?: TienLenState }) => void) => void }).emit('tienlen:getState', (response) => {
+            if (response.success && response.state) {
+                handleStateUpdate(response.state);
+            }
+        });
+
         return () => {
             (socket as unknown as { off: (event: string) => void }).off('tienlen:stateUpdate');
             (socket as unknown as { off: (event: string) => void }).off('tienlen:gameConfig');

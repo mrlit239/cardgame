@@ -55,8 +55,10 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
             // Broadcast game start
             io.to(roomId).emit('game:starting', { roomId, gameType: 'tienlen' });
 
-            // Send personalized state to each player
-            broadcastTienLenState(io, roomId, engine);
+            // Delay state broadcast to allow clients to mount game component
+            setTimeout(() => {
+                broadcastTienLenState(io, roomId, engine);
+            }, 100);
 
             console.log(`🎴 Tiến Lên (${gameConfig.variant}) started in room ${roomId} by host ${socket.username}`);
             callback?.({ success: true });
@@ -64,6 +66,23 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
             console.error('Tiến Lên start error:', error);
             callback?.({ success: false, message: 'Failed to start game' });
         }
+    });
+
+    // Get current game state (for reconnection or initial load)
+    socket.on('tienlen:getState', async (
+        callback?: (response: { success: boolean; state?: ReturnType<TienLenEngine['getStateForPlayer']>; message?: string }) => void
+    ) => {
+        if (!socket.currentRoomId || !socket.userId) {
+            return callback?.({ success: false, message: 'Not in a room' });
+        }
+
+        const engine = tienlenGames.get(socket.currentRoomId);
+        if (!engine) {
+            return callback?.({ success: false, message: 'Game not found' });
+        }
+
+        const state = engine.getStateForPlayer(socket.userId);
+        callback?.({ success: true, state });
     });
 
     // Play cards
