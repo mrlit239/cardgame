@@ -40,6 +40,13 @@ export interface ClientToServerEvents {
     'tictactoe:move': (position: number, callback?: (response: { success: boolean; message?: string }) => void) => void;
     'tictactoe:reset': (callback?: (response: { success: boolean; message?: string }) => void) => void;
     'tictactoe:leave': () => void;
+
+    // Poker
+    'poker:start': (config: { smallBlind: number; bigBlind: number }, callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'poker:action': (data: { action: PokerAction; amount?: number }, callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'poker:nextHand': (callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'poker:getActions': (callback?: (response: { success: boolean; actions?: PokerAvailableAction[] }) => void) => void;
+    'poker:leave': () => void;
 }
 
 // Server to Client Events
@@ -77,8 +84,51 @@ export interface ServerToClientEvents {
     'tictactoe:gameOver': (data: { winner: string | null; isDraw: boolean; winningLine: number[] | null }) => void;
     'tictactoe:playerLeft': (data: { playerId: string }) => void;
 
+    // Poker
+    'poker:stateUpdate': (state: PokerState) => void;
+    'poker:handEnd': (data: { winners: string[]; pot: number }) => void;
+    'poker:gameOver': (data: { message: string }) => void;
+    'poker:playerLeft': (data: { playerId: string }) => void;
+
     // Chat
     'chat:message': (data: { playerId: string; username: string; message: string; timestamp: Date }) => void;
+}
+
+// Poker Types
+export type PokerAction = 'fold' | 'check' | 'call' | 'raise' | 'allIn';
+export type PokerPhase = 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'ended';
+
+export interface PokerAvailableAction {
+    action: PokerAction;
+    minAmount?: number;
+    maxAmount?: number;
+}
+
+export interface PokerPlayer {
+    id: string;
+    username: string;
+    chips: number;
+    currentBet: number;
+    holeCards: Card[];
+    folded: boolean;
+    allIn: boolean;
+    hasActed: boolean;
+    handResult?: { rankName: string; cards: Card[] };
+}
+
+export interface PokerState {
+    phase: PokerPhase;
+    players: PokerPlayer[];
+    communityCards: Card[];
+    pot: number;
+    currentBet: number;
+    currentPlayerIndex: number;
+    dealerIndex: number;
+    smallBlind: number;
+    bigBlind: number;
+    minRaise: number;
+    winners: string[];
+    lastAction?: { playerId: string; action: PokerAction; amount?: number };
 }
 
 // TicTacToe types

@@ -1,0 +1,556 @@
+.poker-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    padding: 20px;
+    color: white;
+}
+
+.poker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.game-phase {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.phase-label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.blinds-info {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.pot-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    padding: 10px 25px;
+    border-radius: 10px;
+}
+
+.pot-label {
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.pot-amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.poker-error {
+    background: rgba(220, 53, 69, 0.9);
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Settings Screen */
+.poker-settings {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 20px;
+    text-align: center;
+}
+
+.poker-settings h3 {
+    margin-bottom: 30px;
+    font-size: 1.8rem;
+}
+
+.setting-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    font-size: 1.1rem;
+}
+
+.setting-group input {
+    width: 100px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.setting-info {
+    color: rgba(255, 255, 255, 0.6);
+    margin: 20px 0;
+}
+
+.btn-large {
+    font-size: 1.3rem;
+    padding: 15px 40px;
+    margin-top: 20px;
+}
+
+/* Poker Table */
+.poker-table {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    height: 450px;
+    margin: 20px auto;
+    background: linear-gradient(135deg, #1a5a32 0%, #247542 50%, #1a5a32 100%);
+    border-radius: 220px;
+    border: 15px solid #5c3d2e;
+    box-shadow:
+        0 0 0 5px #8b6914,
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 0 50px rgba(0, 0, 0, 0.3);
+}
+
+/* Community Cards */
+.community-cards {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 10px;
+}
+
+.poker-card {
+    width: 60px;
+    height: 84px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    border: 2px solid #ddd;
+}
+
+.poker-card.red {
+    color: #dc3545;
+}
+
+.poker-card.black {
+    color: #333;
+}
+
+.poker-card.card-back {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    font-size: 2.5rem;
+}
+
+.poker-card.card-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.card-rank {
+    font-size: 1.2rem;
+}
+
+.card-suit {
+    font-size: 1.4rem;
+}
+
+/* Player Seats */
+.players-around-table {
+    position: absolute;
+    inset: 0;
+}
+
+.player-seat {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 15px;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.player-seat.current-turn {
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.player-seat.folded {
+    opacity: 0.5;
+}
+
+.player-seat.winner {
+    border: 3px solid #28a745;
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.5);
+}
+
+/* Player positions - 6 player layout */
+.player-seat.position-0.total-2 {
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-1.total-2 {
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-0.total-3 {
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-1.total-3 {
+    top: 20%;
+    left: -60px;
+}
+
+.player-seat.position-2.total-3 {
+    top: 20%;
+    right: -60px;
+}
+
+.player-seat.position-0.total-4 {
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-1.total-4 {
+    bottom: 30%;
+    left: -60px;
+}
+
+.player-seat.position-2.total-4 {
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-3.total-4 {
+    bottom: 30%;
+    right: -60px;
+}
+
+.player-seat.position-0.total-5 {
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-1.total-5 {
+    bottom: 20%;
+    left: -60px;
+}
+
+.player-seat.position-2.total-5 {
+    top: 0;
+    left: 15%;
+}
+
+.player-seat.position-3.total-5 {
+    top: 0;
+    right: 15%;
+}
+
+.player-seat.position-4.total-5 {
+    bottom: 20%;
+    right: -60px;
+}
+
+.player-seat.position-0.total-6 {
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-1.total-6 {
+    bottom: 15%;
+    left: -60px;
+}
+
+.player-seat.position-2.total-6 {
+    top: 15%;
+    left: -60px;
+}
+
+.player-seat.position-3.total-6 {
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-4.total-6 {
+    top: 15%;
+    right: -60px;
+}
+
+.player-seat.position-5.total-6 {
+    bottom: 15%;
+    right: -60px;
+}
+
+.player-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.player-info {
+    text-align: center;
+}
+
+.player-name {
+    display: block;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.player-chips {
+    display: block;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.player-bet {
+    display: block;
+    font-size: 0.8rem;
+    color: #ff8c00;
+}
+
+.player-status {
+    display: block;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}
+
+.player-status.all-in {
+    color: #ff4757;
+    font-weight: bold;
+    font-style: normal;
+}
+
+.player-cards {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.player-cards .poker-card {
+    width: 40px;
+    height: 56px;
+    font-size: 1rem;
+}
+
+.player-hand-result {
+    margin-top: 5px;
+    font-size: 0.75rem;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.dealer-button {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 25px;
+    height: 25px;
+    background: #ffd700;
+    color: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+/* My Cards */
+.my-cards {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    padding: 15px 30px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
+}
+
+.my-cards h4 {
+    margin: 0 0 10px 0;
+    color: #ffd700;
+}
+
+.hole-cards {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.hole-cards .poker-card {
+    width: 80px;
+    height: 112px;
+    font-size: 2rem;
+}
+
+.my-info {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.hand-rank {
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Controls */
+.poker-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.9);
+    flex-wrap: wrap;
+}
+
+.raise-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.raise-controls input[type="range"] {
+    width: 100px;
+}
+
+.raise-controls input[type="number"] {
+    width: 80px;
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    text-align: center;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #218838);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #333;
+}
+
+/* Winners Overlay */
+.winners-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.winners-message {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    padding: 40px 60px;
+    border-radius: 20px;
+    text-align: center;
+    border: 3px solid #ffd700;
+}
+
+.winners-message h2 {
+    color: #ffd700;
+    margin-bottom: 20px;
+}
+
+.winner-hand {
+    margin: 10px 0;
+    color: #28a745;
+}
+
+/* Loading */
+.poker-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .poker-table {
+        height: 350px;
+        border-radius: 150px;
+    }
+
+    .poker-card {
+        width: 45px;
+        height: 63px;
+        font-size: 1rem;
+    }
+
+    .poker-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .raise-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .my-cards {
+        bottom: 180px;
+    }
+
+    .hole-cards .poker-card {
+        width: 60px;
+        height: 84px;
+    }
+}

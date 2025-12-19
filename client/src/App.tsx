@@ -5,6 +5,7 @@ import { Lobby } from './components/Lobby';
 import { GameRoom } from './components/GameRoom';
 import { PhomGame } from './games/phom';
 import { TicTacToeGame } from './components/TicTacToe/TicTacToe';
+import { PokerGame } from './components/Poker/PokerGame';
 import type { Room } from '../../shared/types/game';
 import './index.css';
 
@@ -82,6 +83,15 @@ function AppContent() {
       if (currentRoom.gameType === 'tictactoe') {
         return (
           <TicTacToeGame
+            roomId={currentRoom.id}
+            onLeave={handleLeaveRoom}
+          />
+        );
+      }
+
+      if (currentRoom.gameType === 'poker') {
+        return (
+          <PokerGame
             roomId={currentRoom.id}
             onLeave={handleLeaveRoom}
           />
