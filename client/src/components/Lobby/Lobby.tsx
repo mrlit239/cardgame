@@ -139,16 +139,18 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                     </div>
                 ) : (
                     <div className="room-list">
-                        {rooms.filter(r => r.gameType === selectedGameType).map((room) => {
-                            const roomId = room.id || (room as any)._id;
+                        {rooms.map((room) => {
+                            const roomId = room.id || (room as unknown as { _id: string })._id;
+                            const gameInfo = gameTypeInfo[room.gameType] || { icon: '🎮', name: room.gameType };
                             return (
                                 <div key={roomId} className="room-item">
                                     <div className="room-info">
                                         <div className="room-header">
-                                            <span className="room-icon">{gameTypeInfo[room.gameType].icon}</span>
+                                            <span className="room-icon">{gameInfo.icon}</span>
                                             <h3 className="room-name">{room.name}</h3>
                                         </div>
                                         <div className="room-details">
+                                            <span className="room-game-type">{gameInfo.name}</span>
                                             <span className="room-players">
                                                 👥 {room.players.length}/{room.maxPlayers}
                                             </span>
