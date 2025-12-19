@@ -6,20 +6,14 @@
         "esModuleInterop": true,
         "strict": true,
         "outDir": "./dist",
+        "rootDir": "./src",
         "declaration": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true,
-        "baseUrl": ".",
-        "paths": {
-            "@shared/*": [
-                "../shared/*"
-            ]
-        }
+        "resolveJsonModule": true
     },
     "include": [
-        "src/**/*",
-        "../shared/**/*"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",
