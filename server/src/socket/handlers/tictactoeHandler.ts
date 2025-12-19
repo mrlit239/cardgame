@@ -2,36 +2,29 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './authHandler';
 import { TicTacToeEngine } from '../../games/TicTacToeEngine';
 import { getInMemoryRoom } from './lobbyHandler';
-import { Room } from '../../models';
-import { isDatabaseConnected } from '../../config/database';
 
 // Store active TicTacToe games
 const tictactoeGames: Map<string, TicTacToeEngine> = new Map();
 
 export function setupTicTacToeHandlers(io: Server, socket: AuthenticatedSocket) {
     // Start a new TicTacToe game
-    socket.on('tictactoe:start', async (callback?: (response: any) => void) => {
-        if (!socket.currentRoomId || !socket.userId) return;
+    socket.on('tictactoe:start', async (callback?: (response: { success: boolean; message?: string }) => void) => {
+        if (!socket.currentRoomId || !socket.userId) {
+            return callback?.({ success: false, message: 'Not in a room' });
+        }
 
         const roomId = socket.currentRoomId;
 
         try {
-            let players: { id: string; username: string }[] = [];
-
-            if (isDatabaseConnected()) {
-                const room = await Room.findById(roomId);
-                if (!room) return callback?.({ success: false, message: 'Room not found' });
-
-                players = room.players.map(p => ({ id: p.userId, username: p.username }));
-            } else {
-                const room = getInMemoryRoom(roomId);
-                if (!room) return callback?.({ success: false, message: 'Room not found' });
-
-                players = room.players.map(p => ({ id: p.userId, username: p.username }));
+            const room = getInMemoryRoom(roomId);
+            if (!room) {
+                return callback?.({ success: false, message: 'Room not found' });
             }
 
+            const players = room.players.map(p => ({ id: p.id, username: p.username }));
+
             if (players.length !== 2) {
-                return callback?.({ success: false, message: 'Need exactly 2 players' });
+                return callback?.({ success: false, message: `Need exactly 2 players. Currently have ${players.length}` });
             }
 
             // Create new game engine
@@ -41,9 +34,8 @@ export function setupTicTacToeHandlers(io: Server, socket: AuthenticatedSocket) 
             // Broadcast game start to all players in room
             const state = engine.getState();
             io.to(roomId).emit('tictactoe:started', state);
-            io.to(roomId).emit('game:starting', { roomId, gameType: 'tictactoe' });
 
-            console.log(`🎮 TicTacToe game started in room ${roomId}`);
+            console.log(`🎮 TicTacToe game started in room ${roomId} with players: ${players.map(p => p.username).join(', ')}`);
             callback?.({ success: true });
         } catch (error) {
             console.error('TicTacToe start error:', error);
@@ -52,7 +44,7 @@ export function setupTicTacToeHandlers(io: Server, socket: AuthenticatedSocket) 
     });
 
     // Make a move
-    socket.on('tictactoe:move', async (position: number, callback?: (response: any) => void) => {
+    socket.on('tictactoe:move', async (position: number, callback?: (response: { success: boolean; message?: string }) => void) => {
         if (!socket.currentRoomId || !socket.userId) return;
 
         const roomId = socket.currentRoomId;
@@ -85,7 +77,7 @@ export function setupTicTacToeHandlers(io: Server, socket: AuthenticatedSocket) 
     });
 
     // Reset game
-    socket.on('tictactoe:reset', async (callback?: (response: any) => void) => {
+    socket.on('tictactoe:reset', async (callback?: (response: { success: boolean; message?: string }) => void) => {
         if (!socket.currentRoomId) return;
 
         const roomId = socket.currentRoomId;

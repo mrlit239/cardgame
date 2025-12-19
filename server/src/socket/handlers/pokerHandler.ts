@@ -1,45 +1,34 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './authHandler';
-import { PokerEngine, PokerConfig, PokerAction, PokerState } from '../../games/PokerEngine';
+import { PokerEngine, PokerConfig, PokerAction } from '../../games/PokerEngine';
 import { getInMemoryRoom } from './lobbyHandler';
-import { Room } from '../../models';
-import { isDatabaseConnected } from '../../config/database';
 
 // Store active Poker games
 const pokerGames: Map<string, PokerEngine> = new Map();
 
 export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
     // Start a new Poker game
-    socket.on('poker:start', async (config: { smallBlind: number; bigBlind: number }, callback?: (response: any) => void) => {
-        if (!socket.currentRoomId || !socket.userId) return;
+    socket.on('poker:start', async (config: { smallBlind: number; bigBlind: number }, callback?: (response: { success: boolean; message?: string }) => void) => {
+        if (!socket.currentRoomId || !socket.userId) {
+            return callback?.({ success: false, message: 'Not in a room' });
+        }
 
         const roomId = socket.currentRoomId;
 
         try {
-            let players: { id: string; username: string; chips: number }[] = [];
-
-            if (isDatabaseConnected()) {
-                const room = await Room.findById(roomId);
-                if (!room) return callback?.({ success: false, message: 'Room not found' });
-
-                players = room.players.map(p => ({
-                    id: p.userId,
-                    username: p.username,
-                    chips: 1000, // Starting chips
-                }));
-            } else {
-                const room = getInMemoryRoom(roomId);
-                if (!room) return callback?.({ success: false, message: 'Room not found' });
-
-                players = room.players.map(p => ({
-                    id: p.userId,
-                    username: p.username,
-                    chips: 1000, // Starting chips
-                }));
+            const room = getInMemoryRoom(roomId);
+            if (!room) {
+                return callback?.({ success: false, message: 'Room not found' });
             }
 
+            const players = room.players.map(p => ({
+                id: p.id,
+                username: p.username,
+                chips: 1000, // Starting chips
+            }));
+
             if (players.length < 2 || players.length > 6) {
-                return callback?.({ success: false, message: 'Need 2-6 players' });
+                return callback?.({ success: false, message: `Need 2-6 players. Currently have ${players.length}` });
             }
 
             const pokerConfig: PokerConfig = {
@@ -61,7 +50,7 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
             // Send personalized state to each player
             broadcastPokerState(io, roomId, engine);
 
-            console.log(`🎰 Poker game started in room ${roomId}`);
+            console.log(`🎰 Poker game started in room ${roomId} with players: ${players.map(p => p.username).join(', ')}`);
             callback?.({ success: true });
         } catch (error) {
             console.error('Poker start error:', error);
@@ -70,7 +59,7 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
     });
 
     // Player action
-    socket.on('poker:action', async (data: { action: PokerAction; amount?: number }, callback?: (response: any) => void) => {
+    socket.on('poker:action', async (data: { action: PokerAction; amount?: number }, callback?: (response: { success: boolean; message?: string }) => void) => {
         if (!socket.currentRoomId || !socket.userId) return;
 
         const roomId = socket.currentRoomId;
@@ -104,7 +93,7 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
     });
 
     // Start next hand
-    socket.on('poker:nextHand', async (callback?: (response: any) => void) => {
+    socket.on('poker:nextHand', async (callback?: (response: { success: boolean; message?: string }) => void) => {
         if (!socket.currentRoomId) return;
 
         const roomId = socket.currentRoomId;
@@ -128,7 +117,7 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
     });
 
     // Get available actions
-    socket.on('poker:getActions', (callback?: (response: any) => void) => {
+    socket.on('poker:getActions', (callback?: (response: { success: boolean; actions?: unknown[]; message?: string }) => void) => {
         if (!socket.currentRoomId) return;
 
         const engine = pokerGames.get(socket.currentRoomId);
@@ -159,28 +148,15 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
 }
 
 // Broadcast game state to all players (each gets personalized view)
-async function broadcastPokerState(io: Server, roomId: string, engine: PokerEngine) {
-    try {
-        let players: { id: string; socketId?: string }[] = [];
+function broadcastPokerState(io: Server, roomId: string, engine: PokerEngine) {
+    const room = getInMemoryRoom(roomId);
+    if (!room) return;
 
-        if (isDatabaseConnected()) {
-            const room = await Room.findById(roomId);
-            if (!room) return;
-            players = room.players.map(p => ({ id: p.userId, socketId: p.socketId }));
-        } else {
-            const room = getInMemoryRoom(roomId);
-            if (!room) return;
-            players = room.players.map(p => ({ id: p.userId, socketId: p.socketId }));
+    for (const player of room.players) {
+        if (player.socketId) {
+            const personalizedState = engine.getStateForPlayer(player.id);
+            io.to(player.socketId).emit('poker:stateUpdate', personalizedState);
         }
-
-        for (const player of players) {
-            if (player.socketId) {
-                const personalizedState = engine.getStateForPlayer(player.id);
-                io.to(player.socketId).emit('poker:stateUpdate', personalizedState);
-            }
-        }
-    } catch (error) {
-        console.error('Broadcast poker state error:', error);
     }
 }
 
