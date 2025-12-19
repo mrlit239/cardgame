@@ -97,6 +97,7 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
         phom: { name: 'Phom', icon: '🎴', description: 'Vietnamese Rummy - Form sets and runs' },
         poker: { name: 'Poker', icon: '♠️', description: 'Texas Hold\'em - Best 5-card hand wins' },
         durak: { name: 'Durak', icon: '🃏', description: 'Russian Card Game - Don\'t be the fool!' },
+        tictactoe: { name: 'Tic-Tac-Toe', icon: '❌', description: 'Classic XO Game - Get 3 in a row!' },
     };
 
     const currentPlayer = room.players.find(p => p.id === user?.id);
