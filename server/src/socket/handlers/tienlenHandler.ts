@@ -7,8 +7,11 @@ import { getInMemoryRoom } from './lobbyHandler';
 const tienlenGames: Map<string, TienLenEngine> = new Map();
 
 export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
-    // Start a new Tiến Lên game
-    socket.on('tienlen:start', async (config: { variant: TienLenVariant }, callback?: (response: { success: boolean; message?: string }) => void) => {
+    // Start game - HOST ONLY
+    socket.on('tienlen:start', async (
+        config: { variant: TienLenVariant },
+        callback?: (response: { success: boolean; message?: string }) => void
+    ) => {
         if (!socket.currentRoomId || !socket.userId) {
             return callback?.({ success: false, message: 'Not in a room' });
         }
@@ -19,6 +22,11 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
             const room = getInMemoryRoom(roomId);
             if (!room) {
                 return callback?.({ success: false, message: 'Room not found' });
+            }
+
+            // HOST ONLY CHECK
+            if (room.hostId !== socket.userId) {
+                return callback?.({ success: false, message: 'Only the host can start the game' });
             }
 
             const players = room.players.map(p => ({
@@ -38,13 +46,19 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
             const engine = new TienLenEngine(players, gameConfig);
             tienlenGames.set(roomId, engine);
 
-            // Broadcast game start to all players in room
+            // Broadcast game config to all players first
+            io.to(roomId).emit('tienlen:gameConfig', {
+                variant: gameConfig.variant,
+                hostId: room.hostId
+            });
+
+            // Broadcast game start
             io.to(roomId).emit('game:starting', { roomId, gameType: 'tienlen' });
 
             // Send personalized state to each player
             broadcastTienLenState(io, roomId, engine);
 
-            console.log(`🎴 Tiến Lên (${config?.variant || 'south'}) started in room ${roomId} with players: ${players.map(p => p.username).join(', ')}`);
+            console.log(`🎴 Tiến Lên (${gameConfig.variant}) started in room ${roomId} by host ${socket.username}`);
             callback?.({ success: true });
         } catch (error) {
             console.error('Tiến Lên start error:', error);
@@ -53,7 +67,10 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
     });
 
     // Play cards
-    socket.on('tienlen:play', async (data: { cardIds: string[] }, callback?: (response: { success: boolean; message?: string }) => void) => {
+    socket.on('tienlen:play', async (
+        data: { cardIds: string[] },
+        callback?: (response: { success: boolean; message?: string }) => void
+    ) => {
         if (!socket.currentRoomId || !socket.userId) return;
 
         const roomId = socket.currentRoomId;
@@ -69,7 +86,7 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
             return callback?.({ success: false, message: result.message });
         }
 
-        // Broadcast updated state to all players
+        // Broadcast updated state
         broadcastTienLenState(io, roomId, engine);
 
         const state = engine.getState();
@@ -84,14 +101,16 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
                     username: state.players.find(p => p.id === id)?.username
                 }))
             });
-            console.log(`🏆 Tiến Lên game ended in room ${roomId}`);
+            console.log(`🏆 Tiến Lên ended in room ${roomId}`);
         }
 
         callback?.({ success: true });
     });
 
     // Pass turn
-    socket.on('tienlen:pass', async (callback?: (response: { success: boolean; message?: string }) => void) => {
+    socket.on('tienlen:pass', async (
+        callback?: (response: { success: boolean; message?: string }) => void
+    ) => {
         if (!socket.currentRoomId || !socket.userId) return;
 
         const roomId = socket.currentRoomId;
@@ -107,23 +126,10 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
             return callback?.({ success: false, message: result.message });
         }
 
-        // Broadcast updated state to all players
+        // Broadcast updated state
         broadcastTienLenState(io, roomId, engine);
 
         callback?.({ success: true });
-    });
-
-    // Get valid plays for current hand
-    socket.on('tienlen:getValidPlays', (callback?: (response: { success: boolean; validPlays?: string[][] }) => void) => {
-        if (!socket.currentRoomId || !socket.userId) return;
-
-        const engine = tienlenGames.get(socket.currentRoomId);
-        if (!engine) {
-            return callback?.({ success: false });
-        }
-
-        const validPlays = engine.getValidPlays(socket.userId);
-        callback?.({ success: true, validPlays });
     });
 
     // Leave game
@@ -134,11 +140,11 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
         tienlenGames.delete(roomId);
 
         io.to(roomId).emit('tienlen:playerLeft', { playerId: socket.userId });
-        console.log(`👋 Player ${socket.userId} left Tiến Lên game in room ${roomId}`);
+        console.log(`👋 Player ${socket.userId} left Tiến Lên in room ${roomId}`);
     });
 }
 
-// Broadcast game state to all players (each gets personalized view)
+// Broadcast personalized game state to each player
 function broadcastTienLenState(io: Server, roomId: string, engine: TienLenEngine) {
     const room = getInMemoryRoom(roomId);
     if (!room) return;

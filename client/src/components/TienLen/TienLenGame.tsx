@@ -5,13 +5,14 @@ import './TienLen.css';
 
 interface TienLenGameProps {
     onLeave: () => void;
+    isHost: boolean;
 }
 
 interface TienLenPlayer {
     id: string;
     username: string;
     cardCount: number;
-    passed: boolean;
+    hasPassed: boolean;
     isOut: boolean;
     hand?: Card[];
 }
@@ -29,7 +30,7 @@ interface TienLenState {
     lastPlayerId: string | null;
     isFirstTurn: boolean;
     winners: string[];
-    phase: 'playing' | 'ended';
+    phase: 'waiting' | 'playing' | 'ended';
     variant: 'south' | 'north';
     myHand: Card[];
 }
@@ -44,13 +45,12 @@ const SUIT_SYMBOLS: Record<string, string> = {
 };
 
 const COMBINATION_NAMES: Record<string, string> = {
-    single: 'Lẻ',
+    single: 'Rác',
     pair: 'Đôi',
-    triple: 'Bộ Ba',
+    triple: 'Sám',
     fourOfAKind: 'Tứ Quý',
     sequence: 'Sảnh',
-    doubleSequence: 'Sảnh Đôi',
-    tripleSequence: 'Sảnh Ba'
+    pairSequence: 'Đôi Thông'
 };
 
 function PlayCard({ card, selected, onClick, small }: { card: Card; selected?: boolean; onClick?: () => void; small?: boolean }) {
@@ -92,14 +92,14 @@ function CardBack({ count }: { count: number }) {
     );
 }
 
-export function TienLenGame({ onLeave }: TienLenGameProps) {
+export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
     const { user, socket } = useAuth();
     const [gameState, setGameState] = useState<TienLenState | null>(null);
     const [selectedCards, setSelectedCards] = useState<string[]>([]);
     const [error, setError] = useState('');
     const [isStarting, setIsStarting] = useState(false);
     const [variant, setVariant] = useState<'south' | 'north'>('south');
-    const [showSettings, setShowSettings] = useState(true);
+    const [gameStarted, setGameStarted] = useState(false);
 
     useEffect(() => {
         if (!socket) return;
@@ -107,7 +107,11 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
         const handleStateUpdate = (state: TienLenState) => {
             setGameState(state);
             setSelectedCards([]);
-            setShowSettings(false);
+            setGameStarted(true);
+        };
+
+        const handleGameConfig = (config: { variant: 'south' | 'north' }) => {
+            setVariant(config.variant);
         };
 
         const handleGameOver = (data: { winners: string[] }) => {
@@ -119,26 +123,29 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
         };
 
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:stateUpdate', handleStateUpdate as (...args: unknown[]) => void);
+        (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:gameConfig', handleGameConfig as (...args: unknown[]) => void);
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:gameOver', handleGameOver as (...args: unknown[]) => void);
         (socket as unknown as { on: (event: string, handler: (...args: unknown[]) => void) => void }).on('tienlen:playerLeft', handlePlayerLeft as (...args: unknown[]) => void);
 
         return () => {
             (socket as unknown as { off: (event: string) => void }).off('tienlen:stateUpdate');
+            (socket as unknown as { off: (event: string) => void }).off('tienlen:gameConfig');
             (socket as unknown as { off: (event: string) => void }).off('tienlen:gameOver');
             (socket as unknown as { off: (event: string) => void }).off('tienlen:playerLeft');
         };
     }, [socket]);
 
     const startGame = useCallback(() => {
-        if (!socket) return;
+        if (!socket || !isHost) return;
         setIsStarting(true);
         (socket as unknown as { emit: (event: string, data: unknown, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('tienlen:start', { variant }, (response) => {
             setIsStarting(false);
             if (!response.success) {
                 setError(response.message || 'Failed to start game');
+                setTimeout(() => setError(''), 3000);
             }
         });
-    }, [socket, variant]);
+    }, [socket, variant, isHost]);
 
     const playCards = useCallback(() => {
         if (!socket || selectedCards.length === 0) return;
@@ -175,20 +182,17 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
         onLeave();
     }, [socket, onLeave]);
 
-    // Get other players in clockwise order from my position
     const getOtherPlayers = () => {
         if (!gameState) return [];
-        const others = gameState.players.filter(p => p.id !== user?.id);
-        // Order: left, top, right (for 4 players) or top-left, top-right (for 3 players)
-        return others;
+        return gameState.players.filter(p => p.id !== user?.id);
     };
 
     const isMyTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === user?.id;
     const canPass = isMyTurn && gameState?.lastPlay && gameState.lastPlayerId !== user?.id;
     const currentPlayer = gameState?.players[gameState.currentPlayerIndex];
 
-    // Settings screen
-    if (showSettings) {
+    // Pre-game settings screen (HOST ONLY can start)
+    if (!gameStarted) {
         return (
             <div className="tl-container">
                 <div className="tl-header">
@@ -198,37 +202,72 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
                 </div>
                 <div className="tl-settings">
                     <h3>Chọn Kiểu Chơi</h3>
-                    <div className="variant-selector">
-                        <button
-                            className={`variant-card ${variant === 'south' ? 'active' : ''}`}
-                            onClick={() => setVariant('south')}
-                        >
-                            <span className="variant-icon">🌴</span>
-                            <span className="variant-name">Miền Nam</span>
-                            <span className="variant-desc">Có chặt: Tứ Quý chặt Heo, Sảnh Đôi chặt đôi Heo</span>
-                        </button>
-                        <button
-                            className={`variant-card ${variant === 'north' ? 'active' : ''}`}
-                            onClick={() => setVariant('north')}
-                        >
-                            <span className="variant-icon">🏔️</span>
-                            <span className="variant-name">Miền Bắc</span>
-                            <span className="variant-desc">Luật truyền thống, không có chặt đặc biệt</span>
-                        </button>
-                    </div>
-                    <button
-                        className="btn btn-primary btn-large"
-                        onClick={startGame}
-                        disabled={isStarting}
-                    >
-                        {isStarting ? 'Đang bắt đầu...' : '🎮 Bắt Đầu'}
-                    </button>
+
+                    {isHost ? (
+                        <>
+                            <div className="variant-selector">
+                                <button
+                                    className={`variant-card ${variant === 'south' ? 'active' : ''}`}
+                                    onClick={() => setVariant('south')}
+                                >
+                                    <span className="variant-icon">🌴</span>
+                                    <span className="variant-name">Miền Nam</span>
+                                    <span className="variant-desc">
+                                        Có chặt heo: Tứ Quý, Đôi Thông chặt được Heo
+                                    </span>
+                                </button>
+                                <button
+                                    className={`variant-card ${variant === 'north' ? 'active' : ''}`}
+                                    onClick={() => setVariant('north')}
+                                >
+                                    <span className="variant-icon">🏔️</span>
+                                    <span className="variant-name">Miền Bắc</span>
+                                    <span className="variant-desc">
+                                        Phải cùng chất/màu: Đơn cùng chất, Đôi cùng màu
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div className="rules-summary">
+                                {variant === 'south' ? (
+                                    <ul>
+                                        <li>Tứ Quý chặt được 1 Heo, Đôi Heo</li>
+                                        <li>3 Đôi Thông chặt được 1 Heo</li>
+                                        <li>4 Đôi Thông chặt được Đôi Heo, Tứ Quý</li>
+                                    </ul>
+                                ) : (
+                                    <ul>
+                                        <li>Đánh đơn phải cùng chất (♠→♠, ♥→♥)</li>
+                                        <li>Đánh đôi phải cùng màu (đỏ/đen)</li>
+                                        <li>Sảnh phải cùng chất</li>
+                                        <li>Không có Tứ Quý, Đôi Thông</li>
+                                    </ul>
+                                )}
+                            </div>
+
+                            <button
+                                className="btn btn-primary btn-large"
+                                onClick={startGame}
+                                disabled={isStarting}
+                            >
+                                {isStarting ? 'Đang bắt đầu...' : '🎮 Bắt Đầu'}
+                            </button>
+                        </>
+                    ) : (
+                        <div className="waiting-for-host">
+                            <div className="spinner"></div>
+                            <p>Đang chờ Host bắt đầu game...</p>
+                            <p className="hint">Host sẽ chọn luật chơi (Miền Nam hoặc Miền Bắc)</p>
+                        </div>
+                    )}
+
+                    {error && <div className="tl-error">{error}</div>}
                 </div>
             </div>
         );
     }
 
-    // Loading
+    // Loading state
     if (!gameState) {
         return (
             <div className="tl-container">
@@ -239,7 +278,7 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
                 </div>
                 <div className="tl-loading">
                     <div className="spinner"></div>
-                    <p>Đang chờ game bắt đầu...</p>
+                    <p>Đang tải game...</p>
                 </div>
             </div>
         );
@@ -266,7 +305,7 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
 
             {error && <div className="tl-error">{error}</div>}
 
-            {/* Game Over Overlay */}
+            {/* Game Over */}
             {gameState.phase === 'ended' && (
                 <div className="game-over-overlay">
                     <div className="game-over-modal">
@@ -291,7 +330,7 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
 
             {/* Play Table */}
             <div className="tl-table">
-                {/* Other Players around the table */}
+                {/* Other Players */}
                 <div className="table-players">
                     {otherPlayers.map((player, index) => {
                         const isTheirTurn = gameState.players[gameState.currentPlayerIndex]?.id === player.id;
@@ -300,7 +339,7 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
                                 : (index === 0 ? 'left' : index === 1 ? 'top' : 'right');
 
                         return (
-                            <div key={player.id} className={`table-player ${position} ${isTheirTurn ? 'active' : ''} ${player.passed ? 'passed' : ''} ${player.isOut ? 'out' : ''}`}>
+                            <div key={player.id} className={`table-player ${position} ${isTheirTurn ? 'active' : ''} ${player.hasPassed ? 'passed' : ''} ${player.isOut ? 'out' : ''}`}>
                                 <div className="player-seat">
                                     <div className="player-avatar">
                                         {player.username.charAt(0).toUpperCase()}
@@ -309,7 +348,7 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
                                         <span className="player-name">{player.username}</span>
                                         {player.isOut ? (
                                             <span className="player-status finished">✓ Thắng</span>
-                                        ) : player.passed ? (
+                                        ) : player.hasPassed ? (
                                             <span className="player-status passed">Bỏ lượt</span>
                                         ) : (
                                             <CardBack count={player.cardCount} />
@@ -341,7 +380,7 @@ export function TienLenGame({ onLeave }: TienLenGameProps) {
                                 {gameState.isFirstTurn ? (
                                     <span>Lượt đầu - Phải có 3♠</span>
                                 ) : (
-                                    <span>Vòng mới - Đánh bài bất kỳ</span>
+                                    <span>Vòng mới - Đánh bất kỳ</span>
                                 )}
                             </div>
                         )}

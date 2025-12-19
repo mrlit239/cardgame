@@ -102,6 +102,7 @@ function AppContent() {
         return (
           <TienLenGame
             onLeave={handleLeaveRoom}
+            isHost={currentRoom.hostId === user?.id}
           />
         );
       }

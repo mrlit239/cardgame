@@ -1,4 +1,4 @@
-import { Card, createDeck, shuffleDeck } from '../types/card';
+import { Card, Suit, createDeck, shuffleDeck } from '../types/card';
 
 export type TienLenVariant = 'south' | 'north';
 
@@ -10,18 +10,18 @@ export interface TienLenPlayer {
     id: string;
     username: string;
     hand: Card[];
-    passed: boolean;
-    isOut: boolean;  // Finished all cards
+    hasPassed: boolean;  // Has passed in current trick
+    isOut: boolean;      // Has finished all cards
+    hasPlayedAnyCard: boolean;  // For "cóng" detection
 }
 
 export type CombinationType =
     | 'single'
     | 'pair'
     | 'triple'
-    | 'fourOfAKind'
-    | 'sequence'
-    | 'doubleSequence'
-    | 'tripleSequence';
+    | 'fourOfAKind'    // Tứ quý (South only)
+    | 'sequence'       // Sảnh
+    | 'pairSequence';  // Đôi thông (South only)
 
 export interface PlayedCombination {
     type: CombinationType;
@@ -34,60 +34,69 @@ export interface TienLenState {
     currentPlayerIndex: number;
     lastPlay: PlayedCombination | null;
     lastPlayerId: string | null;
-    passCount: number;
     isFirstTurn: boolean;
-    roundStarter: number;
-    winners: string[];  // Order of players who finished
-    phase: 'playing' | 'ended';
+    winners: string[];
+    phase: 'waiting' | 'playing' | 'ended';
     variant: TienLenVariant;
 }
 
-// Card value for Tiến Lên: 3=3, 4=4, ..., A=14, 2=15 (highest)
+// ============ CARD UTILITIES ============
+
+// Card value: 3=3, 4=4, ..., K=13, A=14, 2=15 (highest)
 function getCardValue(card: Card): number {
-    if (card.rank === 2) return 15; // 2 is highest
+    if (card.rank === 2) return 15;
     if (card.rank === 14) return 14; // Ace
     return card.rank;
 }
 
-// Suit ordering: Spades(0) < Clubs(1) < Diamonds(2) < Hearts(3)
-function getSuitValue(card: Card): number {
-    const suitOrder: Record<string, number> = {
-        'spades': 0,
-        'clubs': 1,
-        'diamonds': 2,
-        'hearts': 3
-    };
-    return suitOrder[card.suit] || 0;
+// Get color: red (hearts, diamonds) or black (spades, clubs)
+function getCardColor(card: Card): 'red' | 'black' {
+    return (card.suit === 'hearts' || card.suit === 'diamonds') ? 'red' : 'black';
 }
 
-// Compare two cards: returns positive if a > b
-function compareCards(a: Card, b: Card): number {
-    const valueDiff = getCardValue(a) - getCardValue(b);
-    if (valueDiff !== 0) return valueDiff;
-    return getSuitValue(a) - getSuitValue(b);
+// Sort cards by value then suit
+function sortCards(cards: Card[]): Card[] {
+    return [...cards].sort((a, b) => {
+        const valueDiff = getCardValue(a) - getCardValue(b);
+        if (valueDiff !== 0) return valueDiff;
+        return a.suit.localeCompare(b.suit);
+    });
 }
 
-// Sort cards for display (low to high)
-export function sortHand(cards: Card[]): Card[] {
-    return [...cards].sort(compareCards);
+// Check if card is a "2" (Heo)
+function isHeo(card: Card): boolean {
+    return card.rank === 2;
 }
 
 // Get highest card in a set
 function getHighestCard(cards: Card[]): Card {
     return cards.reduce((highest, card) =>
-        compareCards(card, highest) > 0 ? card : highest
+        getCardValue(card) > getCardValue(highest) ? card : highest
     );
 }
 
+// ============ COMBINATION DETECTION ============
+
+// Check if all cards are same suit
+function allSameSuit(cards: Card[]): boolean {
+    if (cards.length === 0) return true;
+    const suit = cards[0].suit;
+    return cards.every(c => c.suit === suit);
+}
+
+// Check if all cards are same color (red/black)
+function allSameColor(cards: Card[]): boolean {
+    if (cards.length === 0) return true;
+    const color = getCardColor(cards[0]);
+    return cards.every(c => getCardColor(c) === color);
+}
+
 // Check if cards form a valid sequence (3+ consecutive, no 2s)
-function isValidSequence(cards: Card[]): boolean {
+function isSequence(cards: Card[]): boolean {
     if (cards.length < 3) return false;
+    if (cards.some(c => c.rank === 2)) return false; // No 2s in sequences
 
-    // No 2s allowed in sequences
-    if (cards.some(c => c.rank === 2)) return false;
-
-    const sorted = [...cards].sort((a, b) => getCardValue(a) - getCardValue(b));
-
+    const sorted = sortCards(cards);
     for (let i = 1; i < sorted.length; i++) {
         if (getCardValue(sorted[i]) - getCardValue(sorted[i - 1]) !== 1) {
             return false;
@@ -96,12 +105,10 @@ function isValidSequence(cards: Card[]): boolean {
     return true;
 }
 
-// Check if cards form a valid double sequence (3+ consecutive pairs)
-function isValidDoubleSequence(cards: Card[]): boolean {
-    if (cards.length < 6 || cards.length % 2 !== 0) return false;
-
-    // No 2s allowed
-    if (cards.some(c => c.rank === 2)) return false;
+// Check if cards form a pair sequence (đôi thông) - consecutive pairs
+function isPairSequence(cards: Card[]): number { // Returns number of pairs, 0 if invalid
+    if (cards.length < 6 || cards.length % 2 !== 0) return 0;
+    if (cards.some(c => c.rank === 2)) return 0; // No 2s
 
     // Group by rank
     const rankGroups = new Map<number, Card[]>();
@@ -111,125 +118,158 @@ function isValidDoubleSequence(cards: Card[]): boolean {
         rankGroups.get(value)!.push(card);
     }
 
-    // Each group must be a pair
+    // Each group must be exactly a pair
     for (const [, group] of rankGroups) {
-        if (group.length !== 2) return false;
+        if (group.length !== 2) return 0;
     }
 
     // Check consecutive
     const ranks = Array.from(rankGroups.keys()).sort((a, b) => a - b);
     for (let i = 1; i < ranks.length; i++) {
-        if (ranks[i] - ranks[i - 1] !== 1) return false;
+        if (ranks[i] - ranks[i - 1] !== 1) return 0;
     }
 
-    return ranks.length >= 3;
+    return ranks.length; // Number of pairs
 }
 
 // Detect combination type
-export function detectCombination(cards: Card[]): CombinationType | null {
+export function detectCombination(cards: Card[], variant: TienLenVariant): CombinationType | null {
     if (cards.length === 0) return null;
 
     if (cards.length === 1) return 'single';
 
     if (cards.length === 2) {
-        if (cards[0].rank === cards[1].rank) return 'pair';
+        if (cards[0].rank === cards[1].rank) {
+            // Miền Bắc: pairs must be same color
+            if (variant === 'north' && !allSameColor(cards)) return null;
+            return 'pair';
+        }
         return null;
     }
 
     if (cards.length === 3) {
         if (cards.every(c => c.rank === cards[0].rank)) return 'triple';
-        if (isValidSequence(cards)) return 'sequence';
+        if (isSequence(cards)) {
+            // Miền Bắc: sequences must be same suit
+            if (variant === 'north' && !allSameSuit(cards)) return null;
+            return 'sequence';
+        }
         return null;
     }
 
     if (cards.length === 4) {
-        if (cards.every(c => c.rank === cards[0].rank)) return 'fourOfAKind';
-        if (isValidSequence(cards)) return 'sequence';
+        if (cards.every(c => c.rank === cards[0].rank)) {
+            // Tứ quý only exists in South
+            return variant === 'south' ? 'fourOfAKind' : null;
+        }
+        if (isSequence(cards)) {
+            if (variant === 'north' && !allSameSuit(cards)) return null;
+            return 'sequence';
+        }
         return null;
     }
 
     // 5+ cards
-    if (cards.every(c => c.rank === cards[0].rank)) {
-        return null; // Can't have 5+ of same rank
+    if (isSequence(cards)) {
+        if (variant === 'north' && !allSameSuit(cards)) return null;
+        return 'sequence';
     }
 
-    if (isValidSequence(cards)) return 'sequence';
-    if (isValidDoubleSequence(cards)) return 'doubleSequence';
-
-    // Check triple sequence
-    if (cards.length >= 9 && cards.length % 3 === 0) {
-        const rankGroups = new Map<number, Card[]>();
-        for (const card of cards) {
-            const value = getCardValue(card);
-            if (!rankGroups.has(value)) rankGroups.set(value, []);
-            rankGroups.get(value)!.push(card);
-        }
-
-        const allTriples = Array.from(rankGroups.values()).every(g => g.length === 3);
-        if (allTriples) {
-            const ranks = Array.from(rankGroups.keys()).sort((a, b) => a - b);
-            let consecutive = true;
-            for (let i = 1; i < ranks.length; i++) {
-                if (ranks[i] - ranks[i - 1] !== 1) consecutive = false;
-            }
-            if (consecutive && !cards.some(c => c.rank === 2)) {
-                return 'tripleSequence';
-            }
-        }
+    // Đôi thông (South only)
+    if (variant === 'south' && isPairSequence(cards) >= 3) {
+        return 'pairSequence';
     }
 
     return null;
 }
 
-// Check if play beats previous play
+// ============ BEATING LOGIC ============
+
+// Check if newCards can beat lastPlay
 function canBeat(
     newCards: Card[],
     lastPlay: PlayedCombination | null,
     variant: TienLenVariant
 ): boolean {
-    const newType = detectCombination(newCards);
+    const newType = detectCombination(newCards, variant);
     if (!newType) return false;
 
-    // First play of round - any valid combination
+    // First play of trick - any valid combination
     if (!lastPlay) return true;
 
-    // Chops/Bombs - special beats
+    // ============ MIỀN NAM: Chặt Heo Logic ============
     if (variant === 'south') {
-        // Four of a kind beats any single 2
-        if (newType === 'fourOfAKind' && lastPlay.type === 'single' && lastPlay.cards[0].rank === 2) {
-            return true;
+        const lastCards = lastPlay.cards;
+
+        // Chặt single Heo (2)
+        if (lastPlay.type === 'single' && isHeo(lastCards[0])) {
+            // Tứ quý beats single 2
+            if (newType === 'fourOfAKind') return true;
+            // 3+ pair sequence beats single 2
+            if (newType === 'pairSequence' && isPairSequence(newCards) >= 3) return true;
         }
 
-        // Double sequence of 3+ pairs beats single 2
-        if (newType === 'doubleSequence' && lastPlay.type === 'single' && lastPlay.cards[0].rank === 2) {
-            if (newCards.length >= 6) return true;
+        // Chặt đôi Heo (pair of 2s)
+        if (lastPlay.type === 'pair' && lastCards.every(c => isHeo(c))) {
+            // Tứ quý beats pair of 2s
+            if (newType === 'fourOfAKind') return true;
+            // 4+ pair sequence beats pair of 2s
+            if (newType === 'pairSequence' && isPairSequence(newCards) >= 4) return true;
         }
 
-        // Double sequence of 4+ pairs beats pair of 2s
-        if (newType === 'doubleSequence' && lastPlay.type === 'pair' && lastPlay.cards[0].rank === 2) {
-            if (newCards.length >= 8) return true;
+        // Chặt Tứ quý (only 4+ đôi thông can beat)
+        if (lastPlay.type === 'fourOfAKind') {
+            if (newType === 'pairSequence' && isPairSequence(newCards) >= 4) return true;
+            // Higher tứ quý
+            if (newType === 'fourOfAKind') {
+                return getCardValue(getHighestCard(newCards)) > getCardValue(getHighestCard(lastCards));
+            }
+            return false;
         }
 
-        // Four of a kind beats pair of 2s
-        if (newType === 'fourOfAKind' && lastPlay.type === 'pair' && lastPlay.cards[0].rank === 2) {
-            return true;
+        // Chặt đôi thông (only higher đôi thông can beat)
+        if (lastPlay.type === 'pairSequence') {
+            if (newType !== 'pairSequence') return false;
+            const lastPairs = isPairSequence(lastCards);
+            const newPairs = isPairSequence(newCards);
+            if (newPairs !== lastPairs) return false; // Must be same length
+            return getCardValue(getHighestCard(newCards)) > getCardValue(getHighestCard(lastCards));
         }
     }
+
+    // ============ STANDARD BEATING RULES ============
 
     // Must be same type
     if (newType !== lastPlay.type) return false;
 
-    // Must be same length for sequences
-    if (newType === 'sequence' || newType === 'doubleSequence' || newType === 'tripleSequence') {
+    // For sequences, must be same length
+    if (newType === 'sequence') {
         if (newCards.length !== lastPlay.cards.length) return false;
     }
 
-    // Compare highest cards
+    // ============ MIỀN BẮC: Same suit/color requirements ============
+    if (variant === 'north') {
+        // Singles must be same suit
+        if (newType === 'single') {
+            if (newCards[0].suit !== lastPlay.cards[0].suit) return false;
+        }
+
+        // Pairs must be same color
+        if (newType === 'pair') {
+            if (getCardColor(newCards[0]) !== getCardColor(lastPlay.cards[0])) return false;
+        }
+
+        // Sequences must be same suit (already validated in detectCombination)
+    }
+
+    // Compare highest cards - new must be higher
     const newHighest = getHighestCard(newCards);
     const lastHighest = getHighestCard(lastPlay.cards);
 
-    return compareCards(newHighest, lastHighest) > 0;
+    return getCardValue(newHighest) > getCardValue(lastHighest);
 }
+
+// ============ GAME ENGINE ============
 
 export class TienLenEngine {
     private state: TienLenState;
@@ -248,9 +288,10 @@ export class TienLenEngine {
         const players: TienLenPlayer[] = playerData.map((p, index) => ({
             id: p.id,
             username: p.username,
-            hand: sortHand(deck.slice(index * 13, (index + 1) * 13)),
-            passed: false,
+            hand: sortCards(deck.slice(index * 13, (index + 1) * 13)),
+            hasPassed: false,
             isOut: false,
+            hasPlayedAnyCard: false,
         }));
 
         // Find player with 3♠ to start
@@ -267,9 +308,7 @@ export class TienLenEngine {
             currentPlayerIndex: startingPlayer,
             lastPlay: null,
             lastPlayerId: null,
-            passCount: 0,
             isFirstTurn: true,
-            roundStarter: startingPlayer,
             winners: [],
             phase: 'playing',
             variant: config.variant,
@@ -280,20 +319,33 @@ export class TienLenEngine {
         return { ...this.state };
     }
 
-    getStateForPlayer(playerId: string): Omit<TienLenState, 'players'> & {
-        players: Array<Omit<TienLenPlayer, 'hand'> & { cardCount: number; hand?: Card[] }>;
+    getStateForPlayer(playerId: string): {
+        players: Array<{
+            id: string;
+            username: string;
+            cardCount: number;
+            hasPassed: boolean;
+            isOut: boolean;
+            hand?: Card[];
+        }>;
+        currentPlayerIndex: number;
+        lastPlay: PlayedCombination | null;
+        lastPlayerId: string | null;
+        isFirstTurn: boolean;
+        winners: string[];
+        phase: 'waiting' | 'playing' | 'ended';
+        variant: TienLenVariant;
         myHand: Card[];
     } {
         const state = this.getState();
         const player = state.players.find(p => p.id === playerId);
 
-        // For other players, show card count only; for self, show actual hand
         const playersWithHidden = state.players.map(p => ({
             id: p.id,
             username: p.username,
-            passed: p.passed,
-            isOut: p.isOut,
             cardCount: p.hand.length,
+            hasPassed: p.hasPassed,
+            isOut: p.isOut,
             hand: p.id === playerId ? p.hand : undefined,
         }));
 
@@ -301,9 +353,7 @@ export class TienLenEngine {
             currentPlayerIndex: state.currentPlayerIndex,
             lastPlay: state.lastPlay,
             lastPlayerId: state.lastPlayerId,
-            passCount: state.passCount,
             isFirstTurn: state.isFirstTurn,
-            roundStarter: state.roundStarter,
             winners: state.winners,
             phase: state.phase,
             variant: state.variant,
@@ -312,7 +362,7 @@ export class TienLenEngine {
         };
     }
 
-    // Validate and play cards
+    // Play cards
     playCards(playerId: string, cardIds: string[]): { success: boolean; message?: string } {
         if (this.state.phase !== 'playing') {
             return { success: false, message: 'Game is over' };
@@ -329,6 +379,11 @@ export class TienLenEngine {
 
         const player = this.state.players[playerIndex];
 
+        // Can't play if already passed this trick
+        if (player.hasPassed) {
+            return { success: false, message: 'You already passed this trick' };
+        }
+
         // Get cards from hand
         const cards = cardIds.map(id => player.hand.find(c => c.id === id)).filter(Boolean) as Card[];
         if (cards.length !== cardIds.length) {
@@ -342,24 +397,31 @@ export class TienLenEngine {
             }
         }
 
-        // Check if valid play
+        // Validate combination and beating
         if (!canBeat(cards, this.state.lastPlay, this.config.variant)) {
             return { success: false, message: 'Invalid play - cannot beat previous cards' };
         }
 
         // Remove cards from hand
         player.hand = player.hand.filter(c => !cardIds.includes(c.id));
+        player.hasPlayedAnyCard = true;
 
         // Record play
-        const combType = detectCombination(cards)!;
+        const combType = detectCombination(cards, this.config.variant)!;
         this.state.lastPlay = {
             type: combType,
             cards,
             playerId
         };
         this.state.lastPlayerId = playerId;
-        this.state.passCount = 0;
         this.state.isFirstTurn = false;
+
+        // Reset all passed flags (new cards on table)
+        for (const p of this.state.players) {
+            if (p.id !== playerId) {
+                p.hasPassed = false;
+            }
+        }
 
         // Check if player finished
         if (player.hand.length === 0) {
@@ -394,24 +456,28 @@ export class TienLenEngine {
             return { success: false, message: 'Not your turn' };
         }
 
-        // Can't pass on first turn or when starting new round
+        const player = this.state.players[playerIndex];
+
+        // Can't pass on first turn or when no cards on table
         if (!this.state.lastPlay) {
             return { success: false, message: 'Cannot pass - you must play' };
         }
 
-        // Can't pass if you played last
+        // Can't pass if you played last (you won the trick)
         if (this.state.lastPlayerId === playerId) {
-            return { success: false, message: 'Cannot pass - you played last' };
+            return { success: false, message: 'Cannot pass - you won the trick' };
         }
 
-        this.state.players[playerIndex].passed = true;
-        this.state.passCount++;
+        player.hasPassed = true;
 
-        // Check if round ends (everyone passed)
+        // Check if all others have passed -> reset trick
         const activePlayers = this.state.players.filter(p => !p.isOut);
-        if (this.state.passCount >= activePlayers.length - 1) {
-            // New round - last player who played starts
-            this.startNewRound();
+        const allOthersPassed = activePlayers.every(p =>
+            p.id === this.state.lastPlayerId || p.hasPassed
+        );
+
+        if (allOthersPassed) {
+            this.resetTrick();
         } else {
             this.advanceToNextPlayer();
         }
@@ -420,29 +486,44 @@ export class TienLenEngine {
     }
 
     private advanceToNextPlayer(): void {
-        let next = (this.state.currentPlayerIndex + 1) % this.state.players.length;
+        const numPlayers = this.state.players.length;
+        let next = (this.state.currentPlayerIndex + 1) % numPlayers;
+        let attempts = 0;
 
-        // Skip players who are out or passed
-        while (
-            this.state.players[next].isOut ||
-            (this.state.players[next].passed && this.state.lastPlayerId !== this.state.players[next].id)
-        ) {
-            next = (next + 1) % this.state.players.length;
+        // Skip players who are out or have passed
+        while (attempts < numPlayers) {
+            const nextPlayer = this.state.players[next];
 
-            // Safety check
-            if (next === this.state.currentPlayerIndex) break;
+            // Skip if out
+            if (nextPlayer.isOut) {
+                next = (next + 1) % numPlayers;
+                attempts++;
+                continue;
+            }
+
+            // Skip if passed (unless they played last)
+            if (nextPlayer.hasPassed && nextPlayer.id !== this.state.lastPlayerId) {
+                next = (next + 1) % numPlayers;
+                attempts++;
+                continue;
+            }
+
+            break;
         }
 
         this.state.currentPlayerIndex = next;
     }
 
-    private startNewRound(): void {
-        // Reset passes
+    private resetTrick(): void {
+        // Reset all pass flags
         for (const player of this.state.players) {
-            player.passed = false;
+            player.hasPassed = false;
         }
 
-        // Find last player who played
+        // Clear the table
+        this.state.lastPlay = null;
+
+        // Winner of trick starts new trick
         const lastPlayerIndex = this.state.players.findIndex(p => p.id === this.state.lastPlayerId);
 
         if (lastPlayerIndex !== -1 && !this.state.players[lastPlayerIndex].isOut) {
@@ -455,55 +536,5 @@ export class TienLenEngine {
             } while (this.state.players[next].isOut);
             this.state.currentPlayerIndex = next;
         }
-
-        this.state.lastPlay = null;
-        this.state.passCount = 0;
-        this.state.roundStarter = this.state.currentPlayerIndex;
-    }
-
-    // Get valid plays for current player (for UI highlighting)
-    getValidPlays(playerId: string): string[][] {
-        const player = this.state.players.find(p => p.id === playerId);
-        if (!player || player.isOut) return [];
-
-        const validPlays: string[][] = [];
-        const hand = player.hand;
-
-        // Generate all possible combinations and check if valid
-        // This is simplified - a full implementation would be more complex
-
-        // Singles
-        for (const card of hand) {
-            if (canBeat([card], this.state.lastPlay, this.config.variant)) {
-                validPlays.push([card.id]);
-            }
-        }
-
-        // Pairs
-        const rankGroups = new Map<number, Card[]>();
-        for (const card of hand) {
-            const rank = card.rank;
-            if (!rankGroups.has(rank)) rankGroups.set(rank, []);
-            rankGroups.get(rank)!.push(card);
-        }
-
-        for (const [, cards] of rankGroups) {
-            if (cards.length >= 2) {
-                // All pairs from this rank
-                for (let i = 0; i < cards.length - 1; i++) {
-                    for (let j = i + 1; j < cards.length; j++) {
-                        const pair = [cards[i], cards[j]];
-                        if (canBeat(pair, this.state.lastPlay, this.config.variant)) {
-                            validPlays.push([cards[i].id, cards[j].id]);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Note: Full sequence/triple detection would be more complex
-        // This gives basic valid plays
-
-        return validPlays;
     }
 }
