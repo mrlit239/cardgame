@@ -203,6 +203,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                                 >
                                     <option value="phom">Phom (Vietnamese Rummy)</option>
                                     <option value="poker">Poker (Texas Hold'em)</option>
+                                    <option value="tienlen">Tiến Lên (Vietnamese Thirteen)</option>
                                     <option value="durak">Durak (Russian)</option>
                                     <option value="tictactoe">Tic-Tac-Toe (Classic XO)</option>
                                 </select>
@@ -239,6 +240,13 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                                     )}
                                     {selectedGameType === 'tictactoe' && (
                                         <option value="2">2 Players</option>
+                                    )}
+                                    {selectedGameType === 'tienlen' && (
+                                        <>
+                                            <option value="2">2 Players</option>
+                                            <option value="3">3 Players</option>
+                                            <option value="4">4 Players</option>
+                                        </>
                                     )}
                                 </select>
                             </div>
