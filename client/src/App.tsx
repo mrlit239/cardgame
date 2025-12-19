@@ -6,6 +6,7 @@ import { GameRoom } from './components/GameRoom';
 import { PhomGame } from './games/phom';
 import { TicTacToeGame } from './components/TicTacToe/TicTacToe';
 import { PokerGame } from './components/Poker/PokerGame';
+import { TienLenGame } from './components/TienLen/TienLenGame';
 import type { Room } from '../../shared/types/game';
 import './index.css';
 
@@ -92,6 +93,14 @@ function AppContent() {
       if (currentRoom.gameType === 'poker') {
         return (
           <PokerGame
+            onLeave={handleLeaveRoom}
+          />
+        );
+      }
+
+      if (currentRoom.gameType === 'tienlen') {
+        return (
+          <TienLenGame
             onLeave={handleLeaveRoom}
           />
         );

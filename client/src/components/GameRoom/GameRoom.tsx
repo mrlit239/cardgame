@@ -113,7 +113,8 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
     const gameTypeInfo = {
         phom: { name: 'Phom', icon: '🎴', description: 'Vietnamese Rummy - Form sets and runs' },
         poker: { name: 'Poker', icon: '♠️', description: 'Texas Hold\'em - Best 5-card hand wins' },
-        durak: { name: 'Durak', icon: '🃏', description: 'Russian Card Game - Don\'t be the fool!' },
+        tienlen: { name: 'Tiến Lên', icon: '🃏', description: 'Vietnamese Thirteen - Be first to shed all cards!' },
+        durak: { name: 'Durak', icon: '🎯', description: 'Russian Card Game - Don\'t be the fool!' },
         tictactoe: { name: 'Tic-Tac-Toe', icon: '❌', description: 'Classic XO Game - Get 3 in a row!' },
     };
 

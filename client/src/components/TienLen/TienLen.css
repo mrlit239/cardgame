@@ -1,0 +1,412 @@
+.tienlen-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+}
+
+.tienlen-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.tienlen-header h2 {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.turn-indicator {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Settings */
+.tienlen-settings {
+    max-width: 500px;
+    margin: auto;
+    padding: var(--spacing-xl);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+.tienlen-settings h3 {
+    margin-bottom: var(--spacing-lg);
+}
+
+.variant-selector {
+    margin-bottom: var(--spacing-lg);
+}
+
+.variant-selector label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+}
+
+.variant-options {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+.variant-btn {
+    padding: 12px 24px;
+    border: 2px solid var(--border);
+    background: var(--surface-alt);
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.variant-btn:hover {
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.variant-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.variant-info {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+}
+
+/* Loading */
+.tienlen-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+/* Error */
+.tienlen-error {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Other Players */
+.other-players {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.other-player {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.other-player.current-turn {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.other-player.passed {
+    opacity: 0.6;
+}
+
+.other-player.finished {
+    border-color: var(--success);
+}
+
+.player-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.player-name {
+    font-weight: 600;
+}
+
+.player-cards {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.player-passed {
+    font-size: 0.75rem;
+    color: var(--warning);
+    padding: 2px 8px;
+    background: rgba(251, 191, 36, 0.2);
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+}
+
+/* Play Area */
+.play-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+}
+
+.last-play {
+    text-align: center;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.last-play-label {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.played-cards {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.play-area-empty {
+    color: var(--text-muted);
+    padding: var(--spacing-xl);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+}
+
+/* Cards */
+.tienlen-card {
+    width: 60px;
+    height: 85px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.tienlen-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.tienlen-card.selected {
+    transform: translateY(-15px);
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.5);
+    border: 3px solid var(--primary);
+}
+
+.tienlen-card.red {
+    color: #dc2626;
+}
+
+.tienlen-card.black {
+    color: #1f2937;
+}
+
+.tienlen-card .card-rank {
+    font-size: 1.4rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.tienlen-card .card-suit {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+/* My Hand */
+.my-hand {
+    padding: var(--spacing-lg);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    margin: 0 -var(--spacing-md) 0;
+}
+
+.my-hand h4 {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+}
+
+.hand-cards {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Controls */
+.tienlen-controls {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: var(--surface);
+    margin: 0 -var(--spacing-md);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.btn-outline:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+/* Game Over */
+.game-over-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.game-over-content {
+    background: var(--surface);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.game-over-content h2 {
+    margin-bottom: var(--spacing-lg);
+}
+
+.rankings {
+    margin-bottom: var(--spacing-lg);
+}
+
+.rank-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--border);
+}
+
+.rank-row:last-child {
+    border-bottom: none;
+}
+
+.rank-position {
+    font-weight: bold;
+    color: var(--text-secondary);
+}
+
+.rank-trophy {
+    font-size: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tienlen-card {
+        width: 50px;
+        height: 70px;
+    }
+
+    .tienlen-card .card-rank {
+        font-size: 1.1rem;
+    }
+
+    .tienlen-card .card-suit {
+        font-size: 1.4rem;
+    }
+
+    .other-players {
+        gap: var(--spacing-sm);
+    }
+
+    .other-player {
+        padding: var(--spacing-sm);
+    }
+}

@@ -4,6 +4,7 @@ import { setupLobbyHandlers } from './handlers/lobbyHandler';
 import { setupGameHandlers } from './handlers/gameHandler';
 import { setupTicTacToeHandlers } from './handlers/tictactoeHandler';
 import { setupPokerHandlers } from './handlers/pokerHandler';
+import { setupTienLenHandlers } from './handlers/tienlenHandler';
 
 export function setupSocketHandlers(io: Server) {
     io.on('connection', (socket: AuthenticatedSocket) => {
@@ -15,6 +16,7 @@ export function setupSocketHandlers(io: Server) {
         setupGameHandlers(io, socket);
         setupTicTacToeHandlers(io, socket);
         setupPokerHandlers(io, socket);
+        setupTienLenHandlers(io, socket);
 
         // Handle disconnection
         socket.on('disconnect', (reason) => {
