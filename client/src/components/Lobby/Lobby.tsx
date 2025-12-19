@@ -200,6 +200,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                                     <option value="phom">Phom (Vietnamese Rummy)</option>
                                     <option value="poker">Poker (Texas Hold'em)</option>
                                     <option value="durak">Durak (Russian)</option>
+                                    <option value="tictactoe">Tic-Tac-Toe (Classic XO)</option>
                                 </select>
                             </div>
                             <div className="form-group">
@@ -231,6 +232,9 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                                             <option value="4">4 Players</option>
                                             <option value="6">6 Players</option>
                                         </>
+                                    )}
+                                    {selectedGameType === 'tictactoe' && (
+                                        <option value="2">2 Players</option>
                                     )}
                                 </select>
                             </div>
