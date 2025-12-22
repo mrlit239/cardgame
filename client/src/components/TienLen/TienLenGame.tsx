@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import type { Card } from '../../../../shared/types/card';
 import './TienLen.css';
 
@@ -95,12 +96,16 @@ function TaskStack({ count }: { count: number }) {
 
 export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
     const { user, socket } = useAuth();
+    const { theme } = useTheme();
     const [gameState, setGameState] = useState<TienLenState | null>(null);
     const [selectedCards, setSelectedCards] = useState<string[]>([]);
     const [error, setError] = useState('');
     const [isStarting, setIsStarting] = useState(false);
     const [variant, setVariant] = useState<'south' | 'north'>('south');
     const [gameStarted, setGameStarted] = useState(false);
+
+    // Use stealth mode only when theme is 'stealth'
+    const isStealth = theme === 'stealth';
 
     useEffect(() => {
         if (!socket) return;
@@ -199,17 +204,19 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
     const canPass = isMyTurn && gameState?.lastPlay && gameState.lastPlayerId !== user?.id;
     const currentPlayer = gameState?.players[gameState.currentPlayerIndex];
 
-    // Settings screen - disguised as Sprint Setup
+    // Settings screen - conditional based on theme
     if (!gameStarted) {
         return (
-            <div className="sprint-container">
+            <div className={`sprint-container ${!isStealth ? 'normal-mode' : ''}`}>
                 <div className="sprint-header">
-                    <button className="btn-link" onClick={handleLeave}>← Back to Dashboard</button>
-                    <h2>📊 Sprint Planning Session</h2>
-                    <span className="session-id">Session #{Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+                    <button className="btn-link" onClick={handleLeave}>
+                        {isStealth ? '← Back to Dashboard' : '← Leave'}
+                    </button>
+                    <h2>{isStealth ? '📊 Sprint Planning Session' : '🃏 Tiến Lên'}</h2>
+                    {isStealth && <span className="session-id">Session #TL2024</span>}
                 </div>
                 <div className="sprint-setup">
-                    <h3>Configure Estimation Method</h3>
+                    <h3>{isStealth ? 'Configure Estimation Method' : 'Choose Variant'}</h3>
 
                     {isHost ? (
                         <>
@@ -218,20 +225,20 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
                                     className={`method-card ${variant === 'south' ? 'active' : ''}`}
                                     onClick={() => setVariant('south')}
                                 >
-                                    <span className="method-icon">🎯</span>
-                                    <span className="method-name">Flex Scoring</span>
+                                    <span className="method-icon">{isStealth ? '🎯' : '🌴'}</span>
+                                    <span className="method-name">{isStealth ? 'Flex Scoring' : 'Miền Nam'}</span>
                                     <span className="method-desc">
-                                        Allows sprint bundles and epic links to override blockers
+                                        {isStealth ? 'Allows sprint bundles and epic links to override blockers' : 'Tứ quý và đôi thông chặn được 2'}
                                     </span>
                                 </button>
                                 <button
                                     className={`method-card ${variant === 'north' ? 'active' : ''}`}
                                     onClick={() => setVariant('north')}
                                 >
-                                    <span className="method-icon">📏</span>
-                                    <span className="method-name">Strict Mode</span>
+                                    <span className="method-icon">{isStealth ? '📏' : '🏔️'}</span>
+                                    <span className="method-name">{isStealth ? 'Strict Mode' : 'Miền Bắc'}</span>
                                     <span className="method-desc">
-                                        Priority matching required. Same category only.
+                                        {isStealth ? 'Priority matching required. Same category only.' : 'Đánh cùng chất, không có chặt tứ quý'}
                                     </span>
                                 </button>
                             </div>
@@ -241,14 +248,14 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
                                 onClick={startGame}
                                 disabled={isStarting}
                             >
-                                {isStarting ? 'Initializing...' : '▶ Start Planning Session'}
+                                {isStarting ? 'Starting...' : (isStealth ? '▶ Start Planning Session' : '▶ Bắt đầu')}
                             </button>
                         </>
                     ) : (
                         <div className="waiting-host">
                             <div className="spinner"></div>
-                            <p>Waiting for Scrum Master to configure session...</p>
-                            <p className="hint">The host will select the estimation method</p>
+                            <p>{isStealth ? 'Waiting for Scrum Master to configure session...' : 'Chờ host bắt đầu game...'}</p>
+                            <p className="hint">{isStealth ? 'The host will select the estimation method' : 'Host sẽ chọn luật chơi'}</p>
                         </div>
                     )}
 

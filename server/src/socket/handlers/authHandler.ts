@@ -10,6 +10,7 @@ interface AuthenticatedSocket extends Socket {
     userId?: string;
     username?: string;
     currentRoomId?: string;
+    credits?: number;
 }
 
 interface JwtPayload {
@@ -103,6 +104,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
 
                 socket.userId = id;
                 socket.username = username;
+                socket.credits = STARTING_CREDITS;
 
                 callback({
                     success: true,
@@ -145,6 +147,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
 
                 socket.userId = user._id.toString();
                 socket.username = user.username;
+                socket.credits = (user as unknown as { credits?: number }).credits || STARTING_CREDITS;
 
                 callback({
                     success: true,
@@ -174,6 +177,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
 
                 socket.userId = user.id;
                 socket.username = user.username;
+                socket.credits = user.credits;
 
                 callback({
                     success: true,

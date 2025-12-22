@@ -8,6 +8,7 @@ export interface RoomPlayer {
     username: string;
     isReady: boolean;
     socketId: string;
+    credits: number;
 }
 
 interface GameRoom {
@@ -55,6 +56,7 @@ function formatRoomForClient(room: GameRoom) {
         gameType: room.gameType,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
+        betAmount: 100, // Default bet amount
         players: room.players.map(p => ({
             id: p.id,
             username: p.username,
@@ -62,6 +64,7 @@ function formatRoomForClient(room: GameRoom) {
             isConnected: true,
             hand: [],
             score: 0,
+            credits: p.credits || 1000,
         })),
         status: room.status,
         createdAt: room.createdAt,
@@ -126,6 +129,7 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                     username: socket.username,
                     isReady: false,
                     socketId: socket.id,
+                    credits: (socket as unknown as { credits?: number }).credits || 1000,
                 }],
                 status: 'waiting',
                 createdAt: new Date(),
@@ -188,6 +192,7 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                     username: socket.username,
                     isReady: false,
                     socketId: socket.id,
+                    credits: (socket as unknown as { credits?: number }).credits || 1000,
                 });
             }
 
