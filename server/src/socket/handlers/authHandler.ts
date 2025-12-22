@@ -242,6 +242,117 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
         const credits = getUserCredits(socket.userId);
         callback({ success: true, credits });
     });
+
+    // Get user profile
+    socket.on('profile:getProfile', async (callback: (response: {
+        success: boolean;
+        profile?: {
+            username: string;
+            avatar: string;
+            credits: number;
+            stats: { gamesPlayed: number; gamesWon: number; durakCount: number };
+            createdAt: string;
+        };
+        presetAvatars?: string[];
+    }) => void) => {
+        try {
+            if (!socket.userId) {
+                return callback({ success: false });
+            }
+
+            const presetAvatars = [
+                '😀', '😎', '🤠', '🥳', '😈', '👻', '🤖', '👽',
+                '🦊', '🐱', '🐶', '🐼', '🦁', '🐯', '🐸', '🦄',
+                '🔥', '⚡', '🌟', '💎', '🎯', '🎲', '🃏', '♠️'
+            ];
+
+            if (isDatabaseConnected()) {
+                const user = await User.findById(socket.userId);
+                if (user) {
+                    callback({
+                        success: true,
+                        profile: {
+                            username: user.username,
+                            avatar: user.avatar || '😀',
+                            credits: user.credits || 1000,
+                            stats: {
+                                gamesPlayed: user.stats?.gamesPlayed || 0,
+                                gamesWon: user.stats?.gamesWon || 0,
+                                durakCount: user.stats?.durakCount || 0,
+                            },
+                            createdAt: user.createdAt?.toISOString() || new Date().toISOString(),
+                        },
+                        presetAvatars,
+                    });
+                } else {
+                    callback({ success: false });
+                }
+            } else {
+                // In-memory mode
+                const user = inMemoryUsers.get(socket.userId);
+                if (user) {
+                    callback({
+                        success: true,
+                        profile: {
+                            username: user.username,
+                            avatar: (user as unknown as { avatar?: string }).avatar || '😀',
+                            credits: user.credits,
+                            stats: {
+                                gamesPlayed: 0,
+                                gamesWon: 0,
+                                durakCount: 0,
+                            },
+                            createdAt: new Date().toISOString(),
+                        },
+                        presetAvatars,
+                    });
+                } else {
+                    callback({ success: false });
+                }
+            }
+        } catch (error) {
+            console.error('Get profile error:', error);
+            callback({ success: false });
+        }
+    });
+
+    // Update avatar
+    socket.on('profile:updateAvatar', async (data: { avatar: string }, callback: (response: { success: boolean; message?: string }) => void) => {
+        try {
+            if (!socket.userId) {
+                return callback({ success: false, message: 'Not authenticated' });
+            }
+
+            const validAvatars = [
+                '😀', '😎', '🤠', '🥳', '😈', '👻', '🤖', '👽',
+                '🦊', '🐱', '🐶', '🐼', '🦁', '🐯', '🐸', '🦄',
+                '🔥', '⚡', '🌟', '💎', '🎯', '🎲', '🃏', '♠️'
+            ];
+
+            if (!validAvatars.includes(data.avatar)) {
+                return callback({ success: false, message: 'Invalid avatar' });
+            }
+
+            if (isDatabaseConnected()) {
+                await User.findByIdAndUpdate(socket.userId, { avatar: data.avatar });
+                callback({ success: true });
+                console.log(`✅ Avatar updated for ${socket.username}: ${data.avatar}`);
+            } else {
+                // Update in-memory
+                const user = inMemoryUsers.get(socket.userId);
+                if (user) {
+                    (user as unknown as { avatar?: string }).avatar = data.avatar;
+                    callback({ success: true });
+                    console.log(`✅ Avatar updated (demo) for ${socket.username}: ${data.avatar}`);
+                } else {
+                    callback({ success: false, message: 'User not found' });
+                }
+            }
+        } catch (error) {
+            console.error('Update avatar error:', error);
+            callback({ success: false, message: 'Failed to update avatar' });
+        }
+    });
 }
 
 export { AuthenticatedSocket };

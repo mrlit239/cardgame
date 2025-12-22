@@ -316,3 +316,68 @@
     font-size: 0.7rem;
     color: #fbbf24;
 }
+
+/* Emoji Avatar */
+.emoji-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-size: 2.5rem;
+}
+
+/* Avatar Picker */
+.avatar-picker {
+    text-align: center;
+}
+
+.picker-label {
+    color: #8b949e;
+    margin-bottom: 16px;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.avatar-option {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-option:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+}
+
+.avatar-option.selected {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.avatar-option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.saving-text {
+    color: #fbbf24;
+    margin-top: 12px;
+    font-size: 0.85rem;
+}
+
+/* Loading */
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #8b949e;
+}

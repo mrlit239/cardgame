@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import './UserProfile.css';
@@ -10,38 +10,87 @@ interface UserProfileProps {
         id: string;
         username: string;
         credits?: number;
+        avatar?: string;
     };
 }
 
-// Generate avatar color based on username
-function getAvatarColor(username: string): string {
-    const colors = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-        'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-        'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-    ];
-    const index = username.charCodeAt(0) % colors.length;
-    return colors[index];
+interface ProfileData {
+    username: string;
+    avatar: string;
+    credits: number;
+    stats: {
+        gamesPlayed: number;
+        gamesWon: number;
+        durakCount: number;
+    };
+    createdAt: string;
 }
 
 export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
-    const { user, credits } = useAuth();
+    const { user, credits, socket } = useAuth();
     const { theme } = useTheme();
-    const [activeTab, setActiveTab] = useState<'stats' | 'achievements'>('stats');
+    const [activeTab, setActiveTab] = useState<'stats' | 'achievements' | 'avatar'>('stats');
+    const [profileData, setProfileData] = useState<ProfileData | null>(null);
+    const [presetAvatars, setPresetAvatars] = useState<string[]>([]);
+    const [selectedAvatar, setSelectedAvatar] = useState<string>('😀');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Fetch profile data from server
+    useEffect(() => {
+        if (!isOpen || !socket) return;
+
+        setIsLoading(true);
+        (socket as unknown as {
+            emit: (event: string, callback: (response: {
+                success: boolean;
+                profile?: ProfileData;
+                presetAvatars?: string[];
+            }) => void) => void
+        }).emit('profile:getProfile', (response) => {
+            setIsLoading(false);
+            if (response.success && response.profile) {
+                setProfileData(response.profile);
+                setSelectedAvatar(response.profile.avatar);
+            }
+            if (response.presetAvatars) {
+                setPresetAvatars(response.presetAvatars);
+            }
+        });
+    }, [isOpen, socket]);
+
+    const updateAvatar = useCallback((avatar: string) => {
+        if (!socket) return;
+
+        setIsSaving(true);
+        setSelectedAvatar(avatar);
+
+        (socket as unknown as { emit: (event: string, data: { avatar: string }, callback: (response: { success: boolean }) => void) => void })
+            .emit('profile:updateAvatar', { avatar }, (response) => {
+                setIsSaving(false);
+                if (response.success && profileData) {
+                    setProfileData({ ...profileData, avatar });
+                }
+            });
+    }, [socket, profileData]);
 
     if (!isOpen) return null;
 
     // Use target user if provided, otherwise show current user
     const displayUser = targetUser || user;
-    const displayCredits = targetUser?.credits ?? credits;
+    const displayCredits = profileData?.credits ?? targetUser?.credits ?? credits;
+    const displayAvatar = profileData?.avatar ?? targetUser?.avatar ?? selectedAvatar;
     const isOwnProfile = !targetUser || targetUser.id === user?.id;
 
     if (!displayUser) return null;
+
+    const winRate = profileData && profileData.stats.gamesPlayed > 0
+        ? Math.round((profileData.stats.gamesWon / profileData.stats.gamesPlayed) * 100)
+        : 0;
+
+    const memberDate = profileData?.createdAt
+        ? new Date(profileData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        : 'Dec 2024';
 
     return (
         <div className="profile-overlay" onClick={onClose}>
@@ -53,11 +102,8 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
 
                 {/* Header */}
                 <div className="profile-header">
-                    <div
-                        className="profile-avatar"
-                        style={{ background: getAvatarColor(displayUser.username) }}
-                    >
-                        {displayUser.username.charAt(0).toUpperCase()}
+                    <div className="profile-avatar emoji-avatar">
+                        {displayAvatar}
                     </div>
                     <div className="profile-name-section">
                         <h2 className="profile-username">{displayUser.username}</h2>
@@ -79,74 +125,108 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
                     >
                         📊 {theme === 'stealth' ? 'Metrics' : 'Stats'}
                     </button>
+                    {isOwnProfile && (
+                        <button
+                            className={`tab ${activeTab === 'avatar' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('avatar')}
+                        >
+                            🎭 Avatar
+                        </button>
+                    )}
                     <button
                         className={`tab ${activeTab === 'achievements' ? 'active' : ''}`}
                         onClick={() => setActiveTab('achievements')}
                     >
-                        🏆 {theme === 'stealth' ? 'Milestones' : 'Achievements'}
+                        🏆 {theme === 'stealth' ? 'Milestones' : 'Badges'}
                     </button>
                 </div>
 
                 {/* Tab Content */}
                 <div className="profile-content">
-                    {activeTab === 'stats' && (
-                        <div className="stats-grid">
-                            <div className="stat-card">
-                                <span className="stat-value">0</span>
-                                <span className="stat-label">{theme === 'stealth' ? 'Sessions' : 'Games Played'}</span>
-                            </div>
-                            <div className="stat-card">
-                                <span className="stat-value">0</span>
-                                <span className="stat-label">{theme === 'stealth' ? 'Completed' : 'Wins'}</span>
-                            </div>
-                            <div className="stat-card">
-                                <span className="stat-value">0%</span>
-                                <span className="stat-label">{theme === 'stealth' ? 'Success Rate' : 'Win Rate'}</span>
-                            </div>
-                            <div className="stat-card">
-                                <span className="stat-value">0</span>
-                                <span className="stat-label">{theme === 'stealth' ? 'Tasks' : 'Durak Count'}</span>
-                            </div>
-                        </div>
-                    )}
-                    {activeTab === 'achievements' && (
-                        <div className="achievements-list">
-                            <div className="achievement locked">
-                                <span className="achievement-icon">🎮</span>
-                                <div className="achievement-info">
-                                    <span className="achievement-name">First Game</span>
-                                    <span className="achievement-desc">Play your first game</span>
+                    {isLoading ? (
+                        <div className="loading-spinner">Loading...</div>
+                    ) : (
+                        <>
+                            {activeTab === 'stats' && (
+                                <div className="stats-grid">
+                                    <div className="stat-card">
+                                        <span className="stat-value">{profileData?.stats.gamesPlayed ?? 0}</span>
+                                        <span className="stat-label">{theme === 'stealth' ? 'Sessions' : 'Games Played'}</span>
+                                    </div>
+                                    <div className="stat-card">
+                                        <span className="stat-value">{profileData?.stats.gamesWon ?? 0}</span>
+                                        <span className="stat-label">{theme === 'stealth' ? 'Completed' : 'Wins'}</span>
+                                    </div>
+                                    <div className="stat-card">
+                                        <span className="stat-value">{winRate}%</span>
+                                        <span className="stat-label">{theme === 'stealth' ? 'Success Rate' : 'Win Rate'}</span>
+                                    </div>
+                                    <div className="stat-card">
+                                        <span className="stat-value">{profileData?.stats.durakCount ?? 0}</span>
+                                        <span className="stat-label">{theme === 'stealth' ? 'Tasks' : 'Durak Count'}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="achievement locked">
-                                <span className="achievement-icon">🏆</span>
-                                <div className="achievement-info">
-                                    <span className="achievement-name">Victory!</span>
-                                    <span className="achievement-desc">Win your first game</span>
+                            )}
+
+                            {activeTab === 'avatar' && isOwnProfile && (
+                                <div className="avatar-picker">
+                                    <p className="picker-label">Choose your avatar:</p>
+                                    <div className="avatar-grid">
+                                        {presetAvatars.map((emoji) => (
+                                            <button
+                                                key={emoji}
+                                                className={`avatar-option ${selectedAvatar === emoji ? 'selected' : ''}`}
+                                                onClick={() => updateAvatar(emoji)}
+                                                disabled={isSaving}
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {isSaving && <p className="saving-text">Saving...</p>}
                                 </div>
-                            </div>
-                            <div className="achievement locked">
-                                <span className="achievement-icon">💰</span>
-                                <div className="achievement-info">
-                                    <span className="achievement-name">High Roller</span>
-                                    <span className="achievement-desc">Win 10,000 credits</span>
+                            )}
+
+                            {activeTab === 'achievements' && (
+                                <div className="achievements-list">
+                                    <div className={`achievement ${(profileData?.stats.gamesPlayed ?? 0) > 0 ? '' : 'locked'}`}>
+                                        <span className="achievement-icon">🎮</span>
+                                        <div className="achievement-info">
+                                            <span className="achievement-name">First Game</span>
+                                            <span className="achievement-desc">Play your first game</span>
+                                        </div>
+                                    </div>
+                                    <div className={`achievement ${(profileData?.stats.gamesWon ?? 0) > 0 ? '' : 'locked'}`}>
+                                        <span className="achievement-icon">🏆</span>
+                                        <div className="achievement-info">
+                                            <span className="achievement-name">Victory!</span>
+                                            <span className="achievement-desc">Win your first game</span>
+                                        </div>
+                                    </div>
+                                    <div className={`achievement ${displayCredits >= 5000 ? '' : 'locked'}`}>
+                                        <span className="achievement-icon">💰</span>
+                                        <div className="achievement-info">
+                                            <span className="achievement-name">Rich Player</span>
+                                            <span className="achievement-desc">Have 5,000+ credits</span>
+                                        </div>
+                                    </div>
+                                    <div className={`achievement ${(profileData?.stats.gamesPlayed ?? 0) >= 10 ? '' : 'locked'}`}>
+                                        <span className="achievement-icon">🃏</span>
+                                        <div className="achievement-info">
+                                            <span className="achievement-name">Regular Player</span>
+                                            <span className="achievement-desc">Play 10 games</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="achievement locked">
-                                <span className="achievement-icon">🃏</span>
-                                <div className="achievement-info">
-                                    <span className="achievement-name">Card Shark</span>
-                                    <span className="achievement-desc">Win 10 games in a row</span>
-                                </div>
-                            </div>
-                        </div>
+                            )}
+                        </>
                     )}
                 </div>
 
                 {/* Footer */}
                 {isOwnProfile && (
                     <div className="profile-footer">
-                        <span className="member-since">Member since Dec 2024</span>
+                        <span className="member-since">Member since {memberDate}</span>
                     </div>
                 )}
             </div>

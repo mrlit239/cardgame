@@ -1,15 +1,26 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+// Preset emoji avatars users can choose from
+export const PRESET_AVATARS = [
+    '😀', '😎', '🤠', '🥳', '😈', '👻', '🤖', '👽',
+    '🦊', '🐱', '🐶', '🐼', '🦁', '🐯', '🐸', '🦄',
+    '🔥', '⚡', '🌟', '💎', '🎯', '🎲', '🃏', '♠️'
+];
+
 export interface IUser extends Document {
     username: string;
     password: string;
+    avatar: string;
+    credits: number;
     stats: {
         gamesPlayed: number;
         gamesWon: number;
         phomWins: number;
         pokerWins: number;
         durakWins: number;
+        durakCount: number; // Times being durak (loser)
+        tienlenWins: number;
     };
     createdAt: Date;
     updatedAt: Date;
@@ -31,12 +42,22 @@ const userSchema = new Schema<IUser>(
             required: true,
             minlength: 6,
         },
+        avatar: {
+            type: String,
+            default: '😀',
+        },
+        credits: {
+            type: Number,
+            default: 1000,
+        },
         stats: {
             gamesPlayed: { type: Number, default: 0 },
             gamesWon: { type: Number, default: 0 },
             phomWins: { type: Number, default: 0 },
             pokerWins: { type: Number, default: 0 },
             durakWins: { type: Number, default: 0 },
+            durakCount: { type: Number, default: 0 },
+            tienlenWins: { type: Number, default: 0 },
         },
     },
     {
