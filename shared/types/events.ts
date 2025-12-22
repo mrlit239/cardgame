@@ -1,6 +1,37 @@
 import type { Card } from './card';
 import type { Room, GameType, PhomGameState, PokerGameState, DurakGameState } from './game';
 
+// Ba Cây Types
+export interface BaCayPlayer {
+    id: string;
+    username: string;
+    hand: Card[];
+    score: number;
+    totalValue: number;
+    isBaTay: boolean;
+    faceCardCount: number;
+    highestCard: Card | null;
+    isRevealed: boolean;
+}
+
+export interface BaCayResult {
+    playerId: string;
+    username: string;
+    rank: number;
+    score: number;
+    isBaTay: boolean;
+    creditsChange: number;
+}
+
+export interface BaCayState {
+    roomId: string;
+    players: BaCayPlayer[];
+    deckVariant: '52' | '36';
+    phase: 'waiting' | 'dealing' | 'revealing' | 'showdown' | 'finished';
+    betAmount: number;
+    results: BaCayResult[];
+}
+
 // Client to Server Events
 export interface ClientToServerEvents {
     // Auth
@@ -47,6 +78,12 @@ export interface ClientToServerEvents {
     'poker:nextHand': (callback?: (response: { success: boolean; message?: string }) => void) => void;
     'poker:getActions': (callback?: (response: { success: boolean; actions?: PokerAvailableAction[] }) => void) => void;
     'poker:leave': () => void;
+
+    // Ba Cây
+    'bacay:start': (data: { betAmount?: number }, callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'bacay:reveal': (callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'bacay:revealAll': (callback?: (response: { success: boolean; message?: string }) => void) => void;
+    'bacay:leave': () => void;
 }
 
 // Server to Client Events
@@ -89,6 +126,11 @@ export interface ServerToClientEvents {
     'poker:handEnd': (data: { winners: string[]; pot: number }) => void;
     'poker:gameOver': (data: { message: string }) => void;
     'poker:playerLeft': (data: { playerId: string }) => void;
+
+    // Ba Cây
+    'bacay:started': (state: BaCayState) => void;
+    'bacay:stateUpdate': (state: BaCayState) => void;
+    'bacay:gameOver': (data: { results: BaCayResult[]; state: BaCayState }) => void;
 
     // Chat
     'chat:message': (data: { playerId: string; username: string; message: string; timestamp: Date }) => void;

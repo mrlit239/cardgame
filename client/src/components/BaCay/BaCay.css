@@ -1,0 +1,612 @@
+/* Ba Cây Game Styles */
+
+.bacay-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a472a 0%, #0d2818 100%);
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #e1e4e8;
+}
+
+/* Header */
+.bacay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bacay-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #7dd3fc;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+.game-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.game-badge {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.bet-info {
+    color: #fcd34d;
+    font-weight: 500;
+}
+
+.phase-indicator {
+    color: #86efac;
+    font-weight: 500;
+}
+
+/* Setup Screen */
+.bacay-setup {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.setup-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 400px;
+    text-align: center;
+}
+
+.setup-card h3 {
+    margin: 0 0 24px;
+    color: #fff;
+    font-size: 1.4rem;
+}
+
+.bet-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.bet-selector label {
+    color: #c9d1d9;
+}
+
+.bet-selector select {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font-size: 1rem;
+}
+
+.setup-info {
+    color: #8b949e;
+    font-size: 0.85rem;
+    text-align: left;
+    white-space: pre-line;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-large {
+    padding: 16px 40px;
+    font-size: 1.2rem;
+}
+
+/* Playing Cards */
+.bacay-card {
+    width: 70px;
+    height: 100px;
+    background: linear-gradient(135deg, #fff 0%, #f3f4f6 100%);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.bacay-card:hover {
+    transform: translateY(-4px);
+}
+
+.bacay-card.card-back {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    color: white;
+    font-size: 2rem;
+}
+
+.card-rank {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.card-suit {
+    font-size: 1.3rem;
+}
+
+/* Other Players */
+.other-players {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px;
+}
+
+.player-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 200px;
+    text-align: center;
+}
+
+.player-card.revealed {
+    border-color: #22c55e;
+}
+
+.player-name {
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.player-cards {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.player-score {
+    color: #fcd34d;
+    font-weight: 600;
+}
+
+.ba-tay-badge {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 700;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* My Hand */
+.my-hand {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+    padding: 24px;
+    margin-top: auto;
+}
+
+.my-hand-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.my-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #86efac;
+}
+
+.my-score {
+    color: #fcd34d;
+    font-size: 1.1rem;
+}
+
+.my-cards {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.my-cards .bacay-card {
+    width: 90px;
+    height: 130px;
+}
+
+.my-cards .card-rank {
+    font-size: 2rem;
+}
+
+.my-cards .card-suit {
+    font-size: 1.8rem;
+}
+
+.my-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 32px;
+    min-width: 400px;
+    max-width: 90vw;
+    text-align: center;
+}
+
+.modal-content h2 {
+    margin: 0 0 24px;
+    color: #fcd34d;
+}
+
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.result-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    border-radius: 8px;
+}
+
+.result-row.winner {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(22, 163, 74, 0.3) 100%);
+    border: 1px solid #22c55e;
+}
+
+.result-row.ba-tay {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(217, 119, 6, 0.3) 100%);
+    border: 1px solid #f59e0b;
+}
+
+.result-row .rank {
+    font-size: 1.2rem;
+    min-width: 40px;
+}
+
+.result-row .name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.result-row .score {
+    color: #c9d1d9;
+}
+
+.result-row .credits {
+    font-weight: 600;
+    min-width: 80px;
+    text-align: right;
+}
+
+.result-row .credits.positive {
+    color: #22c55e;
+}
+
+.result-row .credits.negative {
+    color: #ef4444;
+}
+
+.error {
+    color: #ef4444;
+    margin-top: 12px;
+}
+
+.error-toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ef4444;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    z-index: 200;
+}
+
+/* ===================================== */
+/* STEALTH MODE - Project Management UI */
+/* ===================================== */
+
+.bacay-container.theme-stealth {
+    background: #1a1d23;
+}
+
+.theme-stealth .bacay-header {
+    background: #21262d;
+    border-bottom: 1px solid #30363d;
+}
+
+.theme-stealth .bacay-header h2 {
+    color: #c9d1d9;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.theme-stealth .btn-link {
+    color: #58a6ff;
+}
+
+.theme-stealth .game-badge {
+    background: #30363d;
+    color: #8b949e;
+}
+
+.theme-stealth .bet-info {
+    color: #8b949e;
+}
+
+.theme-stealth .phase-indicator {
+    color: #3fb950;
+}
+
+.theme-stealth .setup-card {
+    background: #21262d;
+    border-color: #30363d;
+}
+
+.theme-stealth .setup-card h3 {
+    color: #c9d1d9;
+    font-weight: 500;
+}
+
+.theme-stealth .bet-selector select {
+    background: #0d1117;
+    border-color: #30363d;
+}
+
+.theme-stealth .btn-primary {
+    background: #238636;
+}
+
+.theme-stealth .btn-primary:hover:not(:disabled) {
+    background: #2ea043;
+    box-shadow: none;
+    transform: none;
+}
+
+.theme-stealth .btn-secondary {
+    background: #21262d;
+    border-color: #30363d;
+}
+
+.theme-stealth .player-card {
+    background: #21262d;
+    border-color: #30363d;
+}
+
+.theme-stealth .player-card.revealed {
+    border-color: #3fb950;
+}
+
+.theme-stealth .bacay-card {
+    background: #f6f8fa;
+    border-radius: 4px;
+}
+
+.theme-stealth .bacay-card.card-back {
+    background: #30363d;
+}
+
+.theme-stealth .player-score {
+    color: #c9d1d9;
+}
+
+.theme-stealth .ba-tay-badge {
+    background: #f0883e;
+    animation: none;
+}
+
+.theme-stealth .my-hand {
+    background: linear-gradient(0deg, #0d1117 0%, transparent 100%);
+}
+
+.theme-stealth .my-name {
+    color: #c9d1d9;
+}
+
+.theme-stealth .my-score {
+    color: #8b949e;
+}
+
+.theme-stealth .modal-content {
+    background: #161b22;
+    border-color: #30363d;
+}
+
+.theme-stealth .modal-content h2 {
+    color: #c9d1d9;
+}
+
+.theme-stealth .result-row {
+    background: #21262d;
+}
+
+.theme-stealth .result-row.winner {
+    background: rgba(35, 134, 54, 0.2);
+    border-color: #3fb950;
+}
+
+.theme-stealth .result-row.ba-tay {
+    background: rgba(240, 136, 62, 0.2);
+    border-color: #f0883e;
+}
+
+/* ===================================== */
+/* NORMAL MODE - Casino Card Game Style */
+/* ===================================== */
+
+.bacay-container.normal-mode {
+    background: linear-gradient(135deg, #1a472a 0%, #0d2818 100%);
+}
+
+.normal-mode .bacay-header {
+    background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+    border-bottom: 2px solid #22c55e;
+}
+
+.normal-mode .bacay-header h2 {
+    color: #fff;
+}
+
+.normal-mode .btn-link {
+    color: #fef08a;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.normal-mode .game-badge {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.normal-mode .bet-info {
+    color: #fef08a;
+    font-weight: 600;
+}
+
+.normal-mode .setup-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 2px solid rgba(34, 197, 94, 0.4);
+}
+
+.normal-mode .btn-primary {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.normal-mode .bacay-card {
+    background: linear-gradient(135deg, #fff 0%, #f5f5f4 100%);
+    border: 2px solid #a3a3a3;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.normal-mode .my-cards .bacay-card {
+    width: 100px;
+    height: 145px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.normal-mode .player-card {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+    border: 2px solid rgba(34, 197, 94, 0.3);
+}
+
+.normal-mode .player-card.revealed {
+    border-color: #fef08a;
+    box-shadow: 0 0 20px rgba(254, 240, 138, 0.3);
+}
+
+.normal-mode .ba-tay-badge {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    font-size: 1rem;
+}
+
+.normal-mode .result-row.winner {
+    background: linear-gradient(135deg, rgba(254, 240, 138, 0.2) 0%, rgba(250, 204, 21, 0.2) 100%);
+    border: 2px solid #fef08a;
+}
+
+.normal-mode .modal-content {
+    background: linear-gradient(135deg, #1a472a 0%, #0d2818 100%);
+    border: 2px solid #22c55e;
+}
+
+.normal-mode .modal-content h2 {
+    color: #fef08a;
+}

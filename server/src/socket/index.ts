@@ -6,6 +6,7 @@ import { setupTicTacToeHandlers } from './handlers/tictactoeHandler';
 import { setupPokerHandlers } from './handlers/pokerHandler';
 import { setupTienLenHandlers } from './handlers/tienlenHandler';
 import { setupDurakHandlers } from './handlers/durakHandler';
+import { setupBaCayHandler } from './handlers/bacayHandler';
 
 export function setupSocketHandlers(io: Server) {
     io.on('connection', (socket: AuthenticatedSocket) => {
@@ -19,6 +20,7 @@ export function setupSocketHandlers(io: Server) {
         setupPokerHandlers(io, socket);
         setupTienLenHandlers(io, socket);
         setupDurakHandlers(io, socket);
+        setupBaCayHandler(io, socket);
 
         // Handle disconnection
         socket.on('disconnect', (reason) => {

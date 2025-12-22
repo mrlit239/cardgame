@@ -9,6 +9,7 @@ import { TicTacToeGame } from './components/TicTacToe/TicTacToe';
 import { PokerGame } from './components/Poker/PokerGame';
 import { TienLenGame } from './components/TienLen/TienLenGame';
 import { DurakGame } from './components/Durak/DurakGame';
+import { BaCayGame } from './components/BaCay/BaCayGame';
 import type { Room } from '../../shared/types/game';
 import './index.css';
 
@@ -114,6 +115,14 @@ function AppContent() {
           <DurakGame
             onLeave={handleLeaveRoom}
             isHost={currentRoom.hostId === user?.id}
+          />
+        );
+      }
+
+      if (currentRoom.gameType === 'bacay') {
+        return (
+          <BaCayGame
+            onLeave={handleLeaveRoom}
           />
         );
       }

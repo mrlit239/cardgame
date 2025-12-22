@@ -93,6 +93,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
         tienlen: { name: 'Tiến Lên', icon: '🃏', players: '2-4', description: 'Vietnamese Thirteen' },
         durak: { name: 'Durak', icon: '🎯', players: '2-6', description: 'Russian Card Game' },
         tictactoe: { name: 'Tic-Tac-Toe', icon: '❌', players: '2', description: 'Classic XO Game' },
+        bacay: { name: 'Ba Cây', icon: '🃏', players: '2-12', description: '3-Card Vietnamese' },
     };
 
     return (
