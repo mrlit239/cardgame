@@ -1,0 +1,438 @@
+/* Core GameTable - Unified Table UI for All Card Games */
+
+/* ============================================
+   BASE TABLE LAYOUT
+   ============================================ */
+
+.game-table {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.table-felt {
+    flex: 1;
+    position: relative;
+    border-radius: 50% / 30%;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    overflow: visible;
+}
+
+/* ============================================
+   NORMAL MODE - Casino Poker Table Style
+   ============================================ */
+
+.normal-mode .table-felt {
+    background: linear-gradient(145deg, #1a5f3c, #0f3d26);
+    box-shadow:
+        inset 0 0 60px rgba(0, 0, 0, 0.4),
+        0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 8px solid #2a1810;
+}
+
+.normal-mode .table-felt::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 50% / 30%;
+    pointer-events: none;
+}
+
+/* ============================================
+   TABLE INFO HEADER
+   ============================================ */
+
+.table-info {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+    z-index: 10;
+}
+
+.normal-mode .game-name {
+    color: #ffd700;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.normal-mode .pot-amount {
+    color: #4ade80;
+    font-weight: 500;
+}
+
+.normal-mode .round-info {
+    color: #60a5fa;
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   CENTER CONTENT AREA
+   ============================================ */
+
+.table-center {
+    width: 60%;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* ============================================
+   PLAYER SEATS - CIRCULAR POSITIONING
+   ============================================ */
+
+.player-seats {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.player-seat {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    min-width: 100px;
+    max-width: 140px;
+}
+
+/* Position classes */
+.player-seat.position-bottom {
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-top {
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat.position-left {
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.player-seat.position-right {
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.player-seat.position-top-left {
+    top: 10%;
+    left: 5%;
+}
+
+.player-seat.position-top-right {
+    top: 10%;
+    right: 5%;
+}
+
+.player-seat.position-bottom-left {
+    bottom: 10%;
+    left: 5%;
+}
+
+.player-seat.position-bottom-right {
+    bottom: 10%;
+    right: 5%;
+}
+
+/* Me highlight */
+.player-seat.is-me {
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+/* Current turn */
+.player-seat.current-turn {
+    border-color: #4ade80;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+    animation: turnPulse 2s infinite;
+}
+
+@keyframes turnPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(74, 222, 128, 0.8);
+    }
+}
+
+/* Inactive (folded/out) */
+.player-seat.inactive {
+    opacity: 0.5;
+}
+
+/* Winner */
+.player-seat.winner {
+    border-color: #ffd700;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+    animation: winnerGlow 1s infinite alternate;
+}
+
+@keyframes winnerGlow {
+    from {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+    }
+
+    to {
+        box-shadow: 0 0 40px rgba(255, 215, 0, 0.9);
+    }
+}
+
+/* ============================================
+   PLAYER SEAT ELEMENTS
+   ============================================ */
+
+.seat-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #4f46e5, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.seat-avatar.emoji-avatar {
+    background: linear-gradient(145deg, #4f46e5, #7c3aed);
+}
+
+.seat-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.seat-name {
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.seat-credits {
+    color: #fbbf24;
+    font-size: 0.8rem;
+}
+
+.seat-bet {
+    color: #4ade80;
+    font-size: 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+}
+
+.seat-status {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.seat-status.folded,
+.seat-status.out {
+    color: #ef4444;
+}
+
+.seat-status.winner {
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.seat-status.ready {
+    color: #4ade80;
+}
+
+.dealer-chip {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    color: black;
+    font-weight: bold;
+    font-size: 0.8rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #1a1a2e;
+}
+
+.host-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 1rem;
+}
+
+.seat-cards {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.turn-indicator {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.turn-indicator .pulse {
+    display: block;
+    width: 10px;
+    height: 10px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   ACTION BUTTONS AREA
+   ============================================ */
+
+.table-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+/* ============================================
+   STEALTH MODE - Project Management Style
+   ============================================ */
+
+.stealth-mode .table-felt {
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.stealth-mode .table-info {
+    background: #334155;
+}
+
+.stealth-mode .game-name {
+    color: #94a3b8;
+}
+
+.stealth-mode .pot-amount {
+    color: #4ade80;
+}
+
+.stealth-mode .player-seat {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+.stealth-mode .seat-avatar {
+    background: #475569;
+    font-size: 1rem;
+}
+
+.stealth-mode .seat-name {
+    color: #e2e8f0;
+}
+
+.stealth-mode .seat-credits {
+    color: #94a3b8;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .game-table {
+        min-height: 400px;
+        padding: 0.5rem;
+    }
+
+    .table-felt {
+        border-radius: 30% / 20%;
+    }
+
+    .player-seat {
+        padding: 0.5rem;
+        min-width: 80px;
+        max-width: 100px;
+    }
+
+    .seat-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1.4rem;
+    }
+
+    .seat-name {
+        font-size: 0.8rem;
+    }
+
+    .seat-credits {
+        font-size: 0.7rem;
+    }
+}
