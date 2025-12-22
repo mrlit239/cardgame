@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthPage } from './components/Auth';
 import { Lobby } from './components/Lobby';
 import { GameRoom } from './components/GameRoom';
@@ -23,8 +24,8 @@ function AppContent() {
     return (
       <div className="loading-screen">
         <div className="loading-content">
-          <span className="loading-icon">🎴</span>
-          <h1>Card Games</h1>
+          <span className="loading-icon">🎲</span>
+          <h1>Board Game</h1>
           <div className="spinner"></div>
           <p>Loading...</p>
         </div>
@@ -135,9 +136,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

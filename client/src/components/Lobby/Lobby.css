@@ -297,3 +297,50 @@
 select.input {
     cursor: pointer;
 }
+
+/* Theme Toggle Button */
+.btn-theme {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    border-radius: var(--radius-full);
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-theme:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+
+/* Stealth Theme - looks like project management tool */
+.theme-stealth {
+    --bg-primary: #1a1d23;
+    --bg-secondary: #21262d;
+    --bg-card: #161b22;
+    --border-color: #30363d;
+    --text-primary: #c9d1d9;
+    --text-secondary: #8b949e;
+}
+
+.theme-stealth .brand-icon {
+    display: none;
+}
+
+.theme-stealth .lobby-brand h1 {
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+.theme-stealth .game-card .game-icon {
+    font-size: 1rem;
+}
+
+.theme-stealth .game-card h3 {
+    font-size: 0.85rem;
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import type { Room, GameType } from '../../../../shared/types/game';
 import './Lobby.css';
 
@@ -9,6 +10,7 @@ interface LobbyProps {
 
 export function Lobby({ onJoinGame }: LobbyProps) {
     const { user, socket, logout, credits } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedGameType, setSelectedGameType] = useState<GameType>('phom');
@@ -80,14 +82,17 @@ export function Lobby({ onJoinGame }: LobbyProps) {
     };
 
     return (
-        <div className="lobby-container">
+        <div className={`lobby-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
             {/* Header */}
             <header className="lobby-header">
                 <div className="lobby-brand">
-                    <span className="brand-icon">🎴</span>
-                    <h1>Card Games</h1>
+                    <span className="brand-icon">🎲</span>
+                    <h1>{theme === 'stealth' ? 'Project Hub' : 'Board Game'}</h1>
                 </div>
                 <div className="lobby-user">
+                    <button className="btn btn-theme" onClick={toggleTheme} title="Switch theme">
+                        {theme === 'stealth' ? '🃏' : '📊'}
+                    </button>
                     <span className="user-credits">💰 {credits.toLocaleString()}</span>
                     <span className="user-name">{user?.username}</span>
                     <button className="btn btn-secondary" onClick={logout}>
