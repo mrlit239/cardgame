@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import './TicTacToe.css';
 
 interface TicTacToePlayer {
@@ -25,6 +26,7 @@ interface TicTacToeGameProps {
 
 export function TicTacToeGame({ roomId, onLeave }: TicTacToeGameProps) {
     const { user, socket } = useAuth();
+    const { theme } = useTheme();
     const [gameState, setGameState] = useState<TicTacToeState | null>(null);
     const [error, setError] = useState('');
     const [isStarting, setIsStarting] = useState(false);
@@ -100,7 +102,7 @@ export function TicTacToeGame({ roomId, onLeave }: TicTacToeGameProps) {
     // If game hasn't started, show start button
     if (!gameState) {
         return (
-            <div className="tictactoe-container">
+            <div className={`tictactoe-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
                 <div className="tictactoe-header">
                     <button className="btn btn-secondary" onClick={handleLeave}>
                         ← Leave Game
@@ -123,7 +125,7 @@ export function TicTacToeGame({ roomId, onLeave }: TicTacToeGameProps) {
     }
 
     return (
-        <div className="tictactoe-container">
+        <div className={`tictactoe-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
             <div className="tictactoe-header">
                 <button className="btn btn-secondary" onClick={handleLeave}>
                     ← Leave Game

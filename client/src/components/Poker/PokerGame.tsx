@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import type { PokerState, PokerAction, PokerPlayer } from '../../../../shared/types/events';
 import type { Card } from '../../../../shared/types/card';
 import './Poker.css';
@@ -33,6 +34,7 @@ function CardDisplay({ card, hidden = false }: { card: Card; hidden?: boolean })
 
 export function PokerGame({ onLeave }: PokerGameProps) {
     const { user, socket } = useAuth();
+    const { theme } = useTheme();
     const [gameState, setGameState] = useState<PokerState | null>(null);
     const [error, setError] = useState('');
     const [raiseAmount, setRaiseAmount] = useState(0);
@@ -126,7 +128,7 @@ export function PokerGame({ onLeave }: PokerGameProps) {
     // Settings screen
     if (showSettings) {
         return (
-            <div className="poker-container">
+            <div className={`poker-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
                 <div className="poker-header">
                     <button className="btn btn-secondary" onClick={handleLeave}>← Leave</button>
                     <h2>♠️ Texas Hold'em ♥️</h2>
@@ -169,7 +171,7 @@ export function PokerGame({ onLeave }: PokerGameProps) {
     // Loading state or no game
     if (!gameState) {
         return (
-            <div className="poker-container">
+            <div className={`poker-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
                 <div className="poker-header">
                     <button className="btn btn-secondary" onClick={handleLeave}>← Leave</button>
                 </div>
@@ -182,7 +184,7 @@ export function PokerGame({ onLeave }: PokerGameProps) {
     }
 
     return (
-        <div className="poker-container">
+        <div className={`poker-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
             {/* Header */}
             <div className="poker-header">
                 <button className="btn btn-secondary" onClick={handleLeave}>← Leave</button>
