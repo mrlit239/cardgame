@@ -11,6 +11,7 @@ export interface Player {
     isReady: boolean;
     isConnected: boolean;
     score: number;
+    credits?: number;
 }
 
 export interface Room {
@@ -22,6 +23,7 @@ export interface Room {
     maxPlayers: number;
     status: GameStatus;
     createdAt: Date;
+    betAmount: number;
 }
 
 export interface GameState {

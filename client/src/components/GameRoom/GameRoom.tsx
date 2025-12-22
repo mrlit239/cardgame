@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import type { Room } from '../../../../shared/types/game';
 import './GameRoom.css';
 
@@ -10,8 +11,10 @@ interface GameRoomProps {
 }
 
 export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomProps) {
-    const { user, socket } = useAuth();
+    const { user, socket, credits } = useAuth();
+    const { theme } = useTheme();
     const [room, setRoom] = useState(initialRoom);
+    const [betAmount, setBetAmount] = useState(room.betAmount || 100);
     const [error, setError] = useState('');
 
     const isHost = user?.id === room.hostId;
@@ -121,14 +124,23 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
     const currentPlayer = room.players.find(p => p.id === user?.id);
     const isReady = currentPlayer?.isReady || false;
     const allPlayersReady = room.players.every(p => p.id === room.hostId || p.isReady);
-    const canStart = isHost && room.players.length >= 2 && allPlayersReady;
+
+    // Check if all players have sufficient credits for the bet
+    const insufficientCreditsPlayers = room.players.filter(p =>
+        (p.credits ?? credits) < betAmount
+    );
+    const allCanAffordBet = insufficientCreditsPlayers.length === 0;
+    const canStart = isHost && room.players.length >= 2 && allPlayersReady && allCanAffordBet;
 
     return (
-        <div className="game-room-container">
+        <div className={`game-room-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
             <div className="game-room-header">
                 <button className="btn btn-secondary back-btn" onClick={handleLeave}>
                     ← Back to Lobby
                 </button>
+                <div className="my-credits">
+                    💰 {credits.toLocaleString()}
+                </div>
             </div>
 
             <div className="game-room-content">
@@ -143,15 +155,37 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
 
                     <p className="game-description">{gameTypeInfo[room.gameType].description}</p>
 
+                    {/* Bet Amount Section */}
+                    <div className="bet-section">
+                        <h2>💰 Bet Amount</h2>
+                        {isHost ? (
+                            <select
+                                value={betAmount}
+                                onChange={(e) => setBetAmount(Number(e.target.value))}
+                                className="bet-select"
+                            >
+                                <option value={50}>50 💰</option>
+                                <option value={100}>100 💰</option>
+                                <option value={200}>200 💰</option>
+                                <option value={500}>500 💰</option>
+                                <option value={1000}>1000 💰</option>
+                            </select>
+                        ) : (
+                            <span className="bet-display">{betAmount} 💰</span>
+                        )}
+                    </div>
+
                     <div className="players-section">
                         <h2>Players ({room.players.length}/{room.maxPlayers})</h2>
                         <div className="players-grid">
                             {Array.from({ length: room.maxPlayers }).map((_, index) => {
                                 const player = room.players[index];
+                                const playerCredits = player?.credits ?? (player?.id === user?.id ? credits : 0);
+                                const canAfford = playerCredits >= betAmount;
                                 return (
                                     <div
                                         key={index}
-                                        className={`player-slot ${player ? 'occupied' : 'empty'} ${player?.id === room.hostId ? 'host' : ''}`}
+                                        className={`player-slot ${player ? 'occupied' : 'empty'} ${player?.id === room.hostId ? 'host' : ''} ${player && !canAfford ? 'insufficient' : ''}`}
                                     >
                                         {player ? (
                                             <>
@@ -162,6 +196,10 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
                                                     <span className="player-name">
                                                         {player.username}
                                                         {player.id === room.hostId && <span className="host-badge">👑</span>}
+                                                    </span>
+                                                    <span className="player-credits">
+                                                        💰 {playerCredits.toLocaleString()}
+                                                        {!canAfford && <span className="warning">⚠️</span>}
                                                     </span>
                                                     <span className={`player-status ${player.isReady ? 'ready' : ''}`}>
                                                         {player.id === room.hostId ? 'Host' : player.isReady ? '✓ Ready' : 'Waiting...'}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import type { Card, Suit } from '../../../../shared/types/card';
 import './Durak.css';
 
@@ -116,13 +117,13 @@ function CardBack({ small }: { small?: boolean }) {
 
 export function DurakGame({ onLeave, isHost }: DurakGameProps) {
     const { user, socket } = useAuth();
+    const { theme } = useTheme();
     const [gameState, setGameState] = useState<DurakState | null>(null);
     const [selectedCard, setSelectedCard] = useState<string | null>(null);
     const [selectedAttackCard, setSelectedAttackCard] = useState<string | null>(null);
     const [error, setError] = useState('');
     const [isStarting, setIsStarting] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
-    const [betAmount, setBetAmount] = useState(100);
 
     useEffect(() => {
         if (!socket) return;
@@ -165,14 +166,15 @@ export function DurakGame({ onLeave, isHost }: DurakGameProps) {
     const startGame = useCallback(() => {
         if (!socket || !isHost) return;
         setIsStarting(true);
-        (socket as unknown as { emit: (event: string, data: unknown, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('durak:start', { betAmount }, (response) => {
+        // Bet amount now comes from room state, just use a placeholder
+        (socket as unknown as { emit: (event: string, data: unknown, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('durak:start', {}, (response) => {
             setIsStarting(false);
             if (!response.success) {
                 setError(response.message || 'Failed to start game');
                 setTimeout(() => setError(''), 3000);
             }
         });
-    }, [socket, isHost, betAmount]);
+    }, [socket, isHost]);
 
     const attack = useCallback((cardId: string) => {
         if (!socket) return;
@@ -257,40 +259,24 @@ export function DurakGame({ onLeave, isHost }: DurakGameProps) {
         }
     };
 
-    // Pre-game lobby
+    // Pre-game lobby - simplified since bet selection is now in GameRoom
     if (!gameStarted) {
         return (
-            <div className="durak-container">
+            <div className={`durak-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
                 <div className="durak-header">
                     <button className="btn-link" onClick={handleLeave}>← Leave</button>
-                    <h2>🃏 Bài Tấn (Durak)</h2>
+                    <h2>{theme === 'stealth' ? '📊 Sprint Planning' : '🃏 Bài Tấn (Durak)'}</h2>
                     <div></div>
                 </div>
                 <div className="durak-lobby">
-                    <h3>Waiting for players...</h3>
-                    {isHost && (
-                        <div className="bet-selector">
-                            <label>Bet Amount:</label>
-                            <select
-                                value={betAmount}
-                                onChange={(e) => setBetAmount(Number(e.target.value))}
-                                className="bet-select"
-                            >
-                                <option value={50}>50 💰</option>
-                                <option value={100}>100 💰</option>
-                                <option value={200}>200 💰</option>
-                                <option value={500}>500 💰</option>
-                                <option value={1000}>1000 💰</option>
-                            </select>
-                        </div>
-                    )}
+                    <h3>{theme === 'stealth' ? 'Waiting for participants...' : 'Waiting for players...'}</h3>
                     {isHost ? (
                         <button
                             className="btn-primary btn-large"
                             onClick={startGame}
                             disabled={isStarting}
                         >
-                            {isStarting ? 'Starting...' : `▶ Start Game (${betAmount}💰)`}
+                            {isStarting ? 'Starting...' : '▶ Start Game'}
                         </button>
                     ) : (
                         <p>Waiting for host to start...</p>
@@ -304,10 +290,10 @@ export function DurakGame({ onLeave, isHost }: DurakGameProps) {
     // Loading
     if (!gameState) {
         return (
-            <div className="durak-container">
+            <div className={`durak-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
                 <div className="durak-header">
                     <button className="btn-link" onClick={handleLeave}>← Leave</button>
-                    <h2>🃏 Bài Tấn (Durak)</h2>
+                    <h2>{theme === 'stealth' ? '📊 Sprint Planning' : '🃏 Bài Tấn (Durak)'}</h2>
                     <div></div>
                 </div>
                 <div className="loading-state">
@@ -327,7 +313,7 @@ export function DurakGame({ onLeave, isHost }: DurakGameProps) {
     const undefendedCount = gameState.table.filter(b => !b.defenseCard).length;
 
     return (
-        <div className="durak-container">
+        <div className={`durak-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
             {/* Header */}
             <div className="durak-header">
                 <button className="btn-link" onClick={handleLeave}>← Leave</button>

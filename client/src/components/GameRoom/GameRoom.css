@@ -212,3 +212,118 @@
     left: 0;
     color: var(--accent-primary);
 }
+
+/* Header Credits */
+.game-room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.my-credits {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+    color: #000;
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Bet Section */
+.bet-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.bet-section h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.bet-select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: #fcd34d;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bet-select:focus {
+    outline: none;
+    border-color: #fcd34d;
+}
+
+.bet-display {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fcd34d;
+}
+
+/* Player Credits */
+.player-credits {
+    font-size: 0.8rem;
+    color: #fbbf24;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.player-credits .warning {
+    color: #ef4444;
+}
+
+.player-slot.insufficient {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Stealth Theme */
+.theme-stealth {
+    --bg-primary: #1a1d23;
+    --bg-secondary: #21262d;
+    --bg-card: #161b22;
+    --border-color: #30363d;
+    --text-primary: #c9d1d9;
+    --text-secondary: #8b949e;
+}
+
+.theme-stealth .game-icon {
+    font-size: 1.5rem;
+}
+
+.theme-stealth .room-title {
+    font-size: 1.1rem;
+}
+
+.theme-stealth .bet-section {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.theme-stealth .bet-section h2::before {
+    content: '📊 ';
+}
+
+.theme-stealth .bet-display,
+.theme-stealth .bet-select {
+    color: #a78bfa;
+}
+
+.theme-stealth .player-credits {
+    color: #a78bfa;
+}
+
+.theme-stealth .my-credits {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+}

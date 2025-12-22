@@ -632,3 +632,85 @@
         padding: 8px 12px;
     }
 }
+
+/* Stealth Theme - Professional Project Look */
+.theme-stealth.durak-container {
+    background: linear-gradient(135deg, #1a1d23 0%, #0d1117 100%);
+}
+
+.theme-stealth .durak-header {
+    background: rgba(99, 102, 241, 0.1);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.theme-stealth .durak-header h2 {
+    color: #c9d1d9;
+}
+
+.theme-stealth .game-status {
+    color: #a78bfa;
+}
+
+.theme-stealth .trump-indicator {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.theme-stealth .battlefield {
+    background: rgba(99, 102, 241, 0.05);
+    border: 2px dashed rgba(99, 102, 241, 0.3);
+}
+
+.theme-stealth .opponent {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.theme-stealth .opponent.active {
+    border-color: #a78bfa;
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+}
+
+.theme-stealth .my-hand-area {
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.theme-stealth .role-badge {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a78bfa;
+}
+
+.theme-stealth .btn-primary {
+    background: #6366f1;
+}
+
+.theme-stealth .btn-primary:hover:not(:disabled) {
+    background: #4f46e5;
+}
+
+.theme-stealth .btn-danger {
+    background: #7c3aed;
+}
+
+.theme-stealth .btn-danger:hover {
+    background: #6d28d9;
+}
+
+.theme-stealth .modal-content {
+    background: #161b22;
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.theme-stealth .modal-content h2 {
+    color: #a78bfa;
+}
+
+.theme-stealth .result-row.winner {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: #6366f1;
+}
+
+.theme-stealth .result-row.durak {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: #7c3aed;
+}
