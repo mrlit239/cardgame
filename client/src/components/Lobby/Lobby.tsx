@@ -5,17 +5,6 @@ import { UserProfile } from '../UserProfile/UserProfile';
 import type { Room, GameType } from '../../../../shared/types/game';
 import './Lobby.css';
 
-// Generate avatar color based on username
-function getAvatarColor(username: string): string {
-    const colors = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    ];
-    const index = (username.charCodeAt(0) || 0) % colors.length;
-    return colors[index];
-}
 
 interface LobbyProps {
     onJoinGame: (room: Room) => void;
@@ -120,10 +109,9 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                         title="View Profile"
                     >
                         <div
-                            className="mini-avatar"
-                            style={{ background: getAvatarColor(user?.username || '') }}
+                            className="mini-avatar emoji-avatar"
                         >
-                            {user?.username?.charAt(0).toUpperCase()}
+                            {(user as unknown as { avatar?: string })?.avatar || '😀'}
                         </div>
                         <div className="profile-text">
                             <span className="profile-name">{user?.username}</span>
@@ -246,6 +234,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                                     <option value="tienlen">Tiến Lên (Vietnamese Thirteen)</option>
                                     <option value="durak">Durak (Russian)</option>
                                     <option value="tictactoe">Tic-Tac-Toe (Classic XO)</option>
+                                    <option value="bacay">Ba Cây (3 Cards)</option>
                                 </select>
                             </div>
                             <div className="form-group">
@@ -286,6 +275,15 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                                             <option value="2">2 Players</option>
                                             <option value="3">3 Players</option>
                                             <option value="4">4 Players</option>
+                                        </>
+                                    )}
+                                    {selectedGameType === 'bacay' && (
+                                        <>
+                                            <option value="2">2 Players</option>
+                                            <option value="4">4 Players</option>
+                                            <option value="6">6 Players</option>
+                                            <option value="8">8 Players</option>
+                                            <option value="12">12 Players</option>
                                         </>
                                     )}
                                 </select>

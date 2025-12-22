@@ -7,6 +7,7 @@ interface User {
     username: string;
     token: string;
     credits: number;
+    avatar: string;
 }
 
 interface AuthContextType {
@@ -15,10 +16,12 @@ interface AuthContextType {
     isLoading: boolean;
     isConnected: boolean;
     credits: number;
+    avatar: string;
     login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
     register: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
     logout: () => void;
     refreshCredits: () => void;
+    updateAvatar: (avatar: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -29,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const [isConnected, setIsConnected] = useState(false);
     const [credits, setCredits] = useState(1000);
+    const [avatar, setAvatar] = useState('😀');
 
     useEffect(() => {
         const newSocket = socketService.connect();
@@ -92,14 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             socket.emit('auth:login', { username, password }, (response) => {
                 if (response.success && response.userId && response.username && response.token) {
+                    const resWithAvatar = response as unknown as { credits?: number; avatar?: string };
                     const newUser = {
                         id: response.userId,
                         username: response.username,
                         token: response.token,
-                        credits: (response as unknown as { credits?: number }).credits || 1000,
+                        credits: resWithAvatar.credits || 1000,
+                        avatar: resWithAvatar.avatar || '😀',
                     };
                     setUser(newUser);
                     setCredits(newUser.credits);
+                    setAvatar(newUser.avatar);
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('user', JSON.stringify(newUser));
                     resolve({ success: true });
@@ -119,14 +126,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             socket.emit('auth:register', { username, password }, (response) => {
                 if (response.success && response.userId && response.username && response.token) {
+                    const resWithAvatar = response as unknown as { credits?: number; avatar?: string };
                     const newUser = {
                         id: response.userId,
                         username: response.username,
                         token: response.token,
-                        credits: (response as unknown as { credits?: number }).credits || 1000,
+                        credits: resWithAvatar.credits || 1000,
+                        avatar: resWithAvatar.avatar || '😀',
                     };
                     setUser(newUser);
                     setCredits(newUser.credits);
+                    setAvatar(newUser.avatar);
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('user', JSON.stringify(newUser));
                     resolve({ success: true });
@@ -156,8 +166,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
     }, [socket]);
 
+    const updateAvatar = useCallback((newAvatar: string) => {
+        setAvatar(newAvatar);
+        if (user) {
+            setUser({ ...user, avatar: newAvatar });
+        }
+    }, [user]);
+
     return (
-        <AuthContext.Provider value={{ user, socket, isLoading, isConnected, credits, login, register, logout, refreshCredits }}>
+        <AuthContext.Provider value={{ user, socket, isLoading, isConnected, credits, avatar, login, register, logout, refreshCredits, updateAvatar }}>
             {children}
         </AuthContext.Provider>
     );

@@ -339,6 +339,7 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
 
             if (isDatabaseConnected()) {
                 await User.findByIdAndUpdate(socket.userId, { avatar: data.avatar });
+                socket.avatar = data.avatar; // Update socket so room/lobby shows correct avatar
                 callback({ success: true });
                 console.log(`✅ Avatar updated for ${socket.username}: ${data.avatar}`);
             } else {
