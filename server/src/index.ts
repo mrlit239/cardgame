@@ -18,6 +18,7 @@ async function main() {
         'http://localhost:5173',
         'http://localhost:5174',
         'https://cardgame-phom.netlify.app',
+        'https://board-game-lit.netlify.app',
         config.clientUrl,
     ].filter(Boolean);
 
