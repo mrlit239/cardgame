@@ -54,12 +54,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const savedToken = localStorage.getItem('token');
             if (savedToken) {
                 // Use type assertion to handle the custom event
-                (newSocket as any).emit('auth:token', savedToken, (response: { success: boolean }) => {
-                    if (response.success) {
-                        const savedUser = localStorage.getItem('user');
-                        if (savedUser) {
-                            setUser(JSON.parse(savedUser));
-                        }
+                (newSocket as any).emit('auth:token', savedToken, (response: {
+                    success: boolean;
+                    userId?: string;
+                    username?: string;
+                    credits?: number;
+                    avatar?: string;
+                }) => {
+                    if (response.success && response.userId && response.username) {
+                        // Use fresh data from server, not stale localStorage
+                        const freshUser = {
+                            id: response.userId,
+                            username: response.username,
+                            token: savedToken,
+                            credits: response.credits || 1000,
+                            avatar: response.avatar || '😀',
+                        };
+                        setUser(freshUser);
+                        setCredits(freshUser.credits);
+                        setAvatar(freshUser.avatar);
+                        // Update localStorage with fresh data
+                        localStorage.setItem('user', JSON.stringify(freshUser));
+                        console.log(`✅ Session restored with fresh data: credits=${freshUser.credits}, avatar=${freshUser.avatar}`);
                     } else {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');

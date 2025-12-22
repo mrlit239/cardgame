@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useSync } from '../../contexts/SyncContext';
 import type { Room } from '../../../../shared/types/game';
 import './GameRoom.css';
 
@@ -11,7 +12,8 @@ interface GameRoomProps {
 }
 
 export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomProps) {
-    const { user, socket, credits } = useAuth();
+    const { user, socket } = useAuth();
+    const { credits } = useSync();
     const { theme } = useTheme();
     const [room, setRoom] = useState(initialRoom);
     const [betAmount, setBetAmount] = useState(room.betAmount || 100);

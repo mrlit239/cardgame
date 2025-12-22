@@ -200,7 +200,14 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
     });
 
     // Authenticate with token (for reconnection)
-    socket.on('auth:token', async (token: string, callback: (response: { success: boolean; message?: string }) => void) => {
+    socket.on('auth:token', async (token: string, callback: (response: {
+        success: boolean;
+        message?: string;
+        userId?: string;
+        username?: string;
+        credits?: number;
+        avatar?: string;
+    }) => void) => {
         try {
             const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
 
@@ -211,17 +218,43 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
                 }
                 socket.userId = user._id.toString();
                 socket.username = user.username;
+                socket.credits = user.credits || STARTING_CREDITS;
+                socket.avatar = user.avatar || '😀';
+
+                // Clean up any stale room data for this user
+                cleanupUserRooms(socket.userId!);
+
+                callback({
+                    success: true,
+                    userId: user._id.toString(),
+                    username: user.username,
+                    credits: user.credits || STARTING_CREDITS,
+                    avatar: user.avatar || '😀'
+                });
+                console.log(`✅ User authenticated via token: ${user.username} (credits: ${user.credits}, avatar: ${user.avatar})`);
             } else {
-                // Demo mode - trust the token
+                // Demo mode - trust the token but get user from memory
                 socket.userId = decoded.userId;
                 socket.username = decoded.username;
+
+                const memUser = inMemoryUsers.get(decoded.userId);
+                const userCredits = memUser?.credits ?? STARTING_CREDITS;
+                const userAvatar = (memUser as unknown as { avatar?: string })?.avatar || '😀';
+                socket.credits = userCredits;
+                socket.avatar = userAvatar;
+
+                // Clean up any stale room data for this user
+                cleanupUserRooms(socket.userId!);
+
+                callback({
+                    success: true,
+                    userId: decoded.userId,
+                    username: decoded.username,
+                    credits: userCredits,
+                    avatar: userAvatar
+                });
+                console.log(`✅ User authenticated via token (demo): ${decoded.username}`);
             }
-
-            // Clean up any stale room data for this user
-            cleanupUserRooms(socket.userId!);
-
-            callback({ success: true });
-            console.log(`✅ User authenticated via token: ${decoded.username}`);
         } catch (error) {
             callback({ success: false, message: 'Invalid token' });
         }
