@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { GameTable } from '../GameTable';
+import type { PlayerData } from '../GameTable';
 import type { Card as CardType } from '../../../../shared/types/card';
 import './BaCay.css';
 
@@ -13,6 +15,7 @@ interface BaCayPlayer {
     isBaTay: boolean;
     faceCardCount: number;
     isRevealed: boolean;
+    avatar?: string;
 }
 
 interface BaCayResult {
@@ -51,14 +54,14 @@ const SUIT_COLORS: Record<string, string> = {
     clubs: '#1f2937', spades: '#1f2937'
 };
 
-function PlayingCard({ card, hidden = false }: { card: CardType; hidden?: boolean }) {
+function PlayingCard({ card, hidden = false, small = false }: { card: CardType; hidden?: boolean; small?: boolean }) {
     if (hidden) {
-        return <div className="bacay-card card-back">🂠</div>;
+        return <div className={`bacay-card card-back ${small ? 'small' : ''}`}>🂠</div>;
     }
 
     const color = SUIT_COLORS[card.suit];
     return (
-        <div className="bacay-card" style={{ color }}>
+        <div className={`bacay-card ${small ? 'small' : ''}`} style={{ color }}>
             <span className="card-rank">{RANK_DISPLAY[card.rank]}</span>
             <span className="card-suit">{SUIT_SYMBOLS[card.suit]}</span>
         </div>
@@ -138,7 +141,30 @@ export function BaCayGame({ onLeave }: BaCayGameProps) {
     }, [socket, onLeave]);
 
     const myPlayer = gameState?.players.find(p => p.id === user?.id);
-    const otherPlayers = gameState?.players.filter(p => p.id !== user?.id) || [];
+
+    // Convert BaCay players to GameTable PlayerData format
+    const convertToPlayerData = (players: BaCayPlayer[]): PlayerData[] => {
+        return players.map(player => ({
+            id: player.id,
+            username: player.username,
+            avatar: player.avatar,
+            status: player.isRevealed ? 'active' : 'waiting',
+            statusText: player.isRevealed
+                ? (player.isBaTay ? '🎴 Ba Tây!' : `Score: ${player.score}`)
+                : 'Hidden',
+            cards: (
+                <div className="player-hand-mini">
+                    {player.isRevealed ? (
+                        player.hand.map((card, idx) => (
+                            <PlayingCard key={idx} card={card} small />
+                        ))
+                    ) : (
+                        [0, 1, 2].map(i => <PlayingCard key={i} card={{} as CardType} hidden small />)
+                    )}
+                </div>
+            )
+        }));
+    };
 
     // Waiting / Setup screen
     if (!gameState || gameState.phase === 'waiting') {
@@ -186,26 +212,39 @@ export function BaCayGame({ onLeave }: BaCayGameProps) {
         );
     }
 
-    return (
-        <div className={`bacay-container ${isStealth ? 'theme-stealth' : 'normal-mode'}`}>
-            {/* Header */}
-            <div className="bacay-header">
-                <button className="btn-link" onClick={handleLeave}>
-                    {isStealth ? '← Back to Dashboard' : '← Thoát'}
-                </button>
-                <div className="game-info">
-                    <span className="game-badge">{isStealth ? '🎴 Assessment' : '🎴 Ba Cây'}</span>
-                    <span className="bet-info">
-                        {isStealth ? 'Value:' : 'Cược:'} {gameState.betAmount} 💰
-                    </span>
-                </div>
-                <div className="phase-indicator">
-                    {gameState.phase === 'revealing' && (isStealth ? '⏳ Revealing...' : '⏳ Đang mở bài...')}
-                    {gameState.phase === 'showdown' && (isStealth ? '👀 Showdown!' : '👀 So bài!')}
-                    {gameState.phase === 'finished' && (isStealth ? '🏆 Complete' : '🏆 Kết thúc')}
-                </div>
+    // Game in progress - use GameTable for normal mode
+    const centerContent = (
+        <div className="bacay-center-content">
+            <div className="pot-display">
+                <span className="pot-label">{isStealth ? 'Pool' : 'Nồi'}</span>
+                <span className="pot-value">{gameState.betAmount * gameState.players.length} 💰</span>
             </div>
+            <div className="phase-display">
+                {gameState.phase === 'revealing' && (isStealth ? '⏳ Revealing...' : '⏳ Đang mở bài...')}
+                {gameState.phase === 'showdown' && (isStealth ? '👀 Showdown!' : '👀 So bài!')}
+                {gameState.phase === 'finished' && (isStealth ? '🏆 Complete' : '🏆 Kết thúc')}
+            </div>
+        </div>
+    );
 
+    const actions = myPlayer && (
+        <div className="bacay-actions">
+            {!myPlayer.isRevealed && (
+                <button className="btn-primary" onClick={revealHand}>
+                    {isStealth ? '📋 Submit' : '👀 Mở bài'}
+                </button>
+            )}
+            <button className="btn-secondary" onClick={revealAll}>
+                {isStealth ? '⏩ Reveal All' : '⏩ Mở tất cả'}
+            </button>
+            <button className="btn-link" onClick={handleLeave}>
+                {isStealth ? 'Leave' : 'Thoát'}
+            </button>
+        </div>
+    );
+
+    return (
+        <div className={`bacay-game-wrapper ${isStealth ? 'stealth-mode' : 'normal-mode'}`}>
             {error && <div className="error-toast">{error}</div>}
 
             {/* Results Modal */}
@@ -241,35 +280,22 @@ export function BaCayGame({ onLeave }: BaCayGameProps) {
                 </div>
             )}
 
-            {/* Other Players */}
-            <div className="other-players">
-                {otherPlayers.map(player => (
-                    <div key={player.id} className={`player-card ${player.isRevealed ? 'revealed' : ''}`}>
-                        <div className="player-name">{player.username}</div>
-                        <div className="player-cards">
-                            {player.isRevealed ? (
-                                player.hand.map((card, idx) => (
-                                    <PlayingCard key={idx} card={card} />
-                                ))
-                            ) : (
-                                [0, 1, 2].map(i => <PlayingCard key={i} card={{} as CardType} hidden />
-                                )
-                            )}
-                        </div>
-                        {player.isRevealed && (
-                            <div className="player-score">
-                                {player.isBaTay
-                                    ? <span className="ba-tay-badge">{isStealth ? '🎴 Triple Exec!' : '🎴 Ba Tây!'}</span>
-                                    : <span>{isStealth ? 'Score:' : 'Điểm:'} <strong>{player.score}</strong></span>}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
+            {/* Main Game Table */}
+            <GameTable
+                players={convertToPlayerData(gameState.players)}
+                currentPlayerId={null}
+                myId={user?.id || ''}
+                centerContent={centerContent}
+                actions={actions}
+                gameInfo={{
+                    gameName: isStealth ? 'Card Assessment' : 'Ba Cây',
+                    pot: gameState.betAmount * gameState.players.length
+                }}
+            />
 
-            {/* My Hand */}
+            {/* My Hand Panel - Fixed at bottom */}
             {myPlayer && (
-                <div className="my-hand">
+                <div className="my-hand-panel">
                     <div className="my-hand-header">
                         <span className="my-name">{isStealth ? 'Your Assessment' : 'Bài của bạn'}</span>
                         {myPlayer.isRevealed && (
@@ -284,16 +310,6 @@ export function BaCayGame({ onLeave }: BaCayGameProps) {
                         {myPlayer.hand.map((card, idx) => (
                             <PlayingCard key={idx} card={card} />
                         ))}
-                    </div>
-                    <div className="my-actions">
-                        {!myPlayer.isRevealed && (
-                            <button className="btn-primary" onClick={revealHand}>
-                                {isStealth ? '📋 Submit Assessment' : '👀 Mở bài'}
-                            </button>
-                        )}
-                        <button className="btn-secondary" onClick={revealAll}>
-                            {isStealth ? '⏩ Reveal All' : '⏩ Mở tất cả'}
-                        </button>
                     </div>
                 </div>
             )}

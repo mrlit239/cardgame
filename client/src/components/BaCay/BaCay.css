@@ -610,3 +610,196 @@
 .normal-mode .modal-content h2 {
     color: #fef08a;
 }
+
+/* ===================================== */
+/* GAME TABLE INTEGRATION               */
+/* ===================================== */
+
+.bacay-game-wrapper {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.bacay-game-wrapper.normal-mode {
+    background: linear-gradient(180deg, #1a2634 0%, #0d1520 100%);
+}
+
+.bacay-game-wrapper.stealth-mode {
+    background: linear-gradient(180deg, #1a5f3c 0%, #0a3520 100%);
+}
+
+/* Center Content */
+.bacay-center-content {
+    text-align: center;
+}
+
+.pot-display {
+    background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+.pot-label {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+}
+
+.pot-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.phase-display {
+    margin-top: 1rem;
+    color: #4ade80;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Player mini cards */
+.player-hand-mini {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+}
+
+.player-hand-mini .bacay-card {
+    width: 28px;
+    height: 40px;
+    font-size: 0.6rem;
+}
+
+.player-hand-mini .bacay-card.small {
+    width: 28px;
+    height: 40px;
+}
+
+.player-hand-mini .card-rank {
+    font-size: 0.7rem;
+}
+
+.player-hand-mini .card-suit {
+    font-size: 0.6rem;
+}
+
+/* My Hand Panel - Fixed at bottom */
+.my-hand-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
+    padding: 1rem 2rem;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+    z-index: 50;
+}
+
+.my-hand-panel .my-hand-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.my-hand-panel .my-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4ade80;
+}
+
+.my-hand-panel .my-score {
+    color: #fbbf24;
+    font-size: 1rem;
+}
+
+.my-hand-panel .my-cards {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.my-hand-panel .bacay-card {
+    width: 75px;
+    height: 110px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.my-hand-panel .card-rank {
+    font-size: 1.6rem;
+}
+
+.my-hand-panel .card-suit {
+    font-size: 1.4rem;
+}
+
+/* BaCay Actions */
+.bacay-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.bacay-actions .btn-primary {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+}
+
+.bacay-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.6rem 1.2rem;
+}
+
+.bacay-actions .btn-link {
+    color: #ef4444;
+    padding: 0.5rem 1rem;
+}
+
+/* Stealth mode game wrapper */
+.bacay-game-wrapper.stealth-mode .pot-display {
+    background: #334155;
+}
+
+.bacay-game-wrapper.stealth-mode .pot-value {
+    color: #4ade80;
+}
+
+.bacay-game-wrapper.stealth-mode .my-hand-panel {
+    background: linear-gradient(0deg, #0d1520 0%, rgba(13, 21, 32, 0.9) 100%);
+}
+
+.bacay-game-wrapper.stealth-mode .my-name {
+    color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .my-hand-panel {
+        padding: 0.75rem 1rem;
+    }
+
+    .my-hand-panel .bacay-card {
+        width: 60px;
+        height: 90px;
+    }
+
+    .my-hand-panel .card-rank {
+        font-size: 1.3rem;
+    }
+
+    .bacay-actions button {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
