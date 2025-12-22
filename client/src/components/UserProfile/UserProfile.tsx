@@ -51,11 +51,13 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
         // Set loading state
         setIsLoading(true);
 
+        let didRespond = false;
+
         // Timeout to prevent infinite loading
         const timeout = setTimeout(() => {
-            setIsLoading(false);
-            // Set default profile data if server doesn't respond
-            if (!profileData) {
+            if (!didRespond) {
+                setIsLoading(false);
+                // Set default profile data if server doesn't respond
                 setProfileData({
                     username: user?.username || 'Player',
                     avatar: '😀',
@@ -73,11 +75,21 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
                 presetAvatars?: string[];
             }) => void) => void
         }).emit('profile:getProfile', (response) => {
+            didRespond = true;
             clearTimeout(timeout);
             setIsLoading(false);
             if (response.success && response.profile) {
                 setProfileData(response.profile);
                 setSelectedAvatar(response.profile.avatar);
+            } else {
+                // Set default if server responds but no profile
+                setProfileData({
+                    username: user?.username || 'Player',
+                    avatar: '😀',
+                    credits: credits,
+                    stats: { gamesPlayed: 0, gamesWon: 0, durakCount: 0 },
+                    createdAt: new Date().toISOString()
+                });
             }
             if (response.presetAvatars) {
                 setPresetAvatars(response.presetAvatars);
@@ -85,7 +97,7 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
         });
 
         return () => clearTimeout(timeout);
-    }, [isOpen, socket, user, credits, profileData]);
+    }, [isOpen, socket]);
 
     const updateAvatar = useCallback((avatar: string) => {
         if (!socket) return;
