@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Card } from '../../components/Card';
 import type { Card as CardType } from '../../../../shared/types/card';
 import './PhomGame.css';
@@ -36,6 +37,7 @@ interface PhomGameProps {
 
 export function PhomGame({ onLeave }: PhomGameProps) {
     const { user, socket } = useAuth();
+    const { theme } = useTheme();
     const [gameState, setGameState] = useState<PhomGameState | null>(null);
     const [selectedCards, setSelectedCards] = useState<string[]>([]);
     const [isMyTurn, setIsMyTurn] = useState(false);
@@ -153,7 +155,7 @@ export function PhomGame({ onLeave }: PhomGameProps) {
 
     if (!gameState) {
         return (
-            <div className="phom-loading">
+            <div className={`phom-loading ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
                 <div className="spinner"></div>
                 <p>Loading game...</p>
             </div>
@@ -165,7 +167,7 @@ export function PhomGame({ onLeave }: PhomGameProps) {
     const otherPlayers = gameState.players.filter(p => p.id !== user?.id);
 
     return (
-        <div className="phom-game">
+        <div className={`phom-game ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
             {/* Header */}
             <div className="phom-header">
                 <button className="btn btn-secondary" onClick={handleLeave}>

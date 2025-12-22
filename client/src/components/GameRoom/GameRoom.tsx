@@ -190,7 +190,7 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
                                         {player ? (
                                             <>
                                                 <div className="player-avatar">
-                                                    {player.username.charAt(0).toUpperCase()}
+                                                    {(player as unknown as { avatar?: string }).avatar || player.username.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="player-info">
                                                     <span className="player-name">

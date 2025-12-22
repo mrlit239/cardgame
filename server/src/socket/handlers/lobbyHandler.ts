@@ -9,6 +9,7 @@ export interface RoomPlayer {
     isReady: boolean;
     socketId: string;
     credits: number;
+    avatar: string;
 }
 
 interface GameRoom {
@@ -65,6 +66,7 @@ function formatRoomForClient(room: GameRoom) {
             hand: [],
             score: 0,
             credits: p.credits || 1000,
+            avatar: p.avatar || '😀',
         })),
         status: room.status,
         createdAt: room.createdAt,
@@ -130,6 +132,7 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                     isReady: false,
                     socketId: socket.id,
                     credits: (socket as unknown as { credits?: number }).credits || 1000,
+                    avatar: (socket as unknown as { avatar?: string }).avatar || '😀',
                 }],
                 status: 'waiting',
                 createdAt: new Date(),
@@ -193,6 +196,7 @@ export function setupLobbyHandlers(io: Server, socket: AuthenticatedSocket) {
                     isReady: false,
                     socketId: socket.id,
                     credits: (socket as unknown as { credits?: number }).credits || 1000,
+                    avatar: (socket as unknown as { avatar?: string }).avatar || '😀',
                 });
             }
 
