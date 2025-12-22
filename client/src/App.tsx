@@ -7,6 +7,7 @@ import { PhomGame } from './games/phom';
 import { TicTacToeGame } from './components/TicTacToe/TicTacToe';
 import { PokerGame } from './components/Poker/PokerGame';
 import { TienLenGame } from './components/TienLen/TienLenGame';
+import { DurakGame } from './components/Durak/DurakGame';
 import type { Room } from '../../shared/types/game';
 import './index.css';
 
@@ -107,10 +108,19 @@ function AppContent() {
         );
       }
 
+      if (currentRoom.gameType === 'durak') {
+        return (
+          <DurakGame
+            onLeave={handleLeaveRoom}
+            isHost={currentRoom.hostId === user?.id}
+          />
+        );
+      }
+
       // Fallback for other games (not yet implemented)
       return (
         <div className="game-placeholder">
-          <h1>{currentRoom.gameType.toUpperCase()} - Coming Soon!</h1>
+          <h1>{String(currentRoom.gameType).toUpperCase()} - Coming Soon!</h1>
           <p>This game is not yet implemented.</p>
           <button className="btn btn-secondary" onClick={handleLeaveRoom}>
             Back to Lobby
