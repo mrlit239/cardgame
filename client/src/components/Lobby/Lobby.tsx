@@ -1,8 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { UserProfile } from '../UserProfile/UserProfile';
 import type { Room, GameType } from '../../../../shared/types/game';
 import './Lobby.css';
+
+// Generate avatar color based on username
+function getAvatarColor(username: string): string {
+    const colors = [
+        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    ];
+    const index = (username.charCodeAt(0) || 0) % colors.length;
+    return colors[index];
+}
 
 interface LobbyProps {
     onJoinGame: (room: Room) => void;
@@ -13,6 +26,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
     const { theme, toggleTheme } = useTheme();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
     const [selectedGameType, setSelectedGameType] = useState<GameType>('phom');
     const [roomName, setRoomName] = useState('');
     const [maxPlayers, setMaxPlayers] = useState(4);
@@ -83,6 +97,12 @@ export function Lobby({ onJoinGame }: LobbyProps) {
 
     return (
         <div className={`lobby-container ${theme === 'stealth' ? 'theme-stealth' : ''}`}>
+            {/* User Profile Modal */}
+            <UserProfile
+                isOpen={showProfileModal}
+                onClose={() => setShowProfileModal(false)}
+            />
+
             {/* Header */}
             <header className="lobby-header">
                 <div className="lobby-brand">
@@ -93,8 +113,22 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                     <button className="btn btn-theme" onClick={toggleTheme} title="Switch theme">
                         {theme === 'stealth' ? '🃏' : '📊'}
                     </button>
-                    <span className="user-credits">💰 {credits.toLocaleString()}</span>
-                    <span className="user-name">{user?.username}</span>
+                    <button
+                        className="profile-button"
+                        onClick={() => setShowProfileModal(true)}
+                        title="View Profile"
+                    >
+                        <div
+                            className="mini-avatar"
+                            style={{ background: getAvatarColor(user?.username || '') }}
+                        >
+                            {user?.username?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="profile-text">
+                            <span className="profile-name">{user?.username}</span>
+                            <span className="profile-credits">💰 {credits.toLocaleString()}</span>
+                        </div>
+                    </button>
                     <button className="btn btn-secondary" onClick={logout}>
                         Logout
                     </button>
