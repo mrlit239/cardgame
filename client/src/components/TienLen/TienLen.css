@@ -628,3 +628,265 @@
         max-width: 300px;
     }
 }
+
+/* ==================================== */
+/* NORMAL MODE - Card Game Theme */
+/* ==================================== */
+
+.sprint-container.normal-mode {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+}
+
+.normal-mode .sprint-header {
+    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+    border-bottom: 2px solid #4caf50;
+}
+
+.normal-mode .sprint-header h2 {
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.normal-mode .btn-link {
+    color: #ffeb3b;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.normal-mode .btn-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+}
+
+.normal-mode .sprint-badge {
+    background: linear-gradient(135deg, #ff5722 0%, #e64a19 100%);
+    color: #fff;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 16px;
+}
+
+.normal-mode .sprint-name {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.normal-mode .your-turn {
+    color: #ffeb3b;
+    font-weight: 700;
+    font-size: 1rem;
+    background: rgba(255, 235, 59, 0.2);
+    padding: 4px 12px;
+    border-radius: 8px;
+}
+
+/* Setup Screen - Normal Mode */
+.normal-mode .sprint-setup {
+    background: radial-gradient(ellipse at center, rgba(46, 125, 50, 0.3) 0%, transparent 70%);
+}
+
+.normal-mode .sprint-setup h3 {
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.normal-mode .method-card {
+    background: linear-gradient(135deg, #37474f 0%, #263238 100%);
+    border: 2px solid #546e7a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.normal-mode .method-card:hover {
+    border-color: #4caf50;
+    transform: translateY(-4px);
+}
+
+.normal-mode .method-card.selected {
+    border-color: #4caf50;
+    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.normal-mode .method-card h4 {
+    color: #fff;
+}
+
+/* Planning Board - Normal Mode */
+.normal-mode .planning-board {
+    background: transparent;
+}
+
+.normal-mode .team-panel {
+    background: linear-gradient(180deg, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0.1) 100%);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    border-radius: 12px;
+}
+
+.normal-mode .team-panel h4 {
+    color: #64b5f6;
+}
+
+.normal-mode .team-member {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.normal-mode .team-member.active {
+    background: rgba(76, 175, 80, 0.3);
+    border-color: #4caf50;
+}
+
+.normal-mode .member-avatar {
+    background: linear-gradient(135deg, #ff5722 0%, #e64a19 100%);
+    color: #fff;
+}
+
+.normal-mode .member-name {
+    color: #fff;
+}
+
+.normal-mode .member-status {
+    color: #90caf9;
+}
+
+.normal-mode .member-status.done {
+    color: #4caf50;
+}
+
+/* Main Area - Normal Mode */
+.normal-mode .main-area {
+    background: radial-gradient(ellipse at center, rgba(46, 125, 50, 0.2) 0%, transparent 70%);
+}
+
+.normal-mode .current-review {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 2px solid rgba(76, 175, 80, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.normal-mode .current-review h4 {
+    color: #4caf50;
+}
+
+.normal-mode .current-card {
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+/* Ticket Cards - Normal Mode (Look like playing cards) */
+.normal-mode .ticket-card {
+    background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+    border: 2px solid #bdbdbd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    color: #212121;
+}
+
+.normal-mode .ticket-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+.normal-mode .ticket-card.selected {
+    border-color: #4caf50;
+    box-shadow: 0 0 16px rgba(76, 175, 80, 0.6);
+}
+
+.normal-mode .ticket-id {
+    background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+    color: #fff;
+}
+
+.normal-mode .ticket-priority.high,
+.normal-mode .ticket-priority.critical {
+    background: #f44336;
+}
+
+.normal-mode .ticket-priority.medium {
+    background: #ff9800;
+}
+
+.normal-mode .ticket-priority.low {
+    background: #4caf50;
+}
+
+.normal-mode .sp-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212121;
+}
+
+.normal-mode .ticket-status {
+    color: #4caf50;
+}
+
+/* Action Buttons - Normal Mode */
+.normal-mode .action-buttons {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.normal-mode .btn-submit {
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.normal-mode .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.6);
+}
+
+.normal-mode .btn-skip {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.normal-mode .btn-skip:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* My Backlog - Normal Mode (Player's hand) */
+.normal-mode .my-backlog {
+    background: linear-gradient(180deg, #1b5e20 0%, #0d3d0f 100%);
+    border-top: 3px solid #4caf50;
+}
+
+.normal-mode .my-backlog .header-row h3 {
+    color: #fff;
+}
+
+.normal-mode .my-backlog .subtitle {
+    color: #a5d6a7;
+}
+
+/* Modal - Normal Mode */
+.normal-mode .modal-overlay .modal-content {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+    border: 2px solid #4caf50;
+}
+
+.normal-mode .modal-content h2 {
+    color: #4caf50;
+}
+
+.normal-mode .result-row {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.normal-mode .result-row.top-performer {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 152, 0, 0.3) 100%);
+    border-color: #ffc107;
+}
+
+.normal-mode .btn-primary {
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+}
