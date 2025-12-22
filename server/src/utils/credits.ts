@@ -94,6 +94,7 @@ export async function getUserCredits(userId: string): Promise<number> {
 /**
  * Batch update credits for multiple users
  * Used after game ends with multiple winners/losers
+ * @returns Map of userId to new credits balance
  */
 export async function batchUpdateCredits(
     updates: Array<{
@@ -102,15 +103,22 @@ export async function batchUpdateCredits(
         gameType: GameTypeForStats;
         isWin: boolean;
     }>
-): Promise<void> {
+): Promise<Map<string, number>> {
+    const results = new Map<string, number>();
+
     await Promise.all(
-        updates.map(update =>
-            updateUserCredits(
+        updates.map(async update => {
+            const user = await updateUserCredits(
                 update.userId,
                 update.creditChange,
                 update.gameType,
                 update.isWin
-            )
-        )
+            );
+            if (user) {
+                results.set(update.userId, user.credits);
+            }
+        })
     );
+
+    return results;
 }

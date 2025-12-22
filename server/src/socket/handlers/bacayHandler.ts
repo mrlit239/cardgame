@@ -107,7 +107,7 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
             io.to(roomId).emit('bacay:gameOver', { results, state: game.getState() });
 
             // Persist credits to database
-            await batchUpdateCredits(
+            const updatedCredits = await batchUpdateCredits(
                 results.map(r => ({
                     userId: r.playerId,
                     creditChange: r.creditsChange,
@@ -115,6 +115,18 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
                     isWin: r.rank === 1
                 }))
             );
+
+            // Emit credits changed to each player's socket
+            const roomSockets = io.sockets.adapter.rooms.get(roomId);
+            if (roomSockets) {
+                for (const socketId of roomSockets) {
+                    const s = io.sockets.sockets.get(socketId) as AuthenticatedSocket;
+                    if (s?.userId && updatedCredits.has(s.userId)) {
+                        s.emit('user:creditsChanged', { credits: updatedCredits.get(s.userId) });
+                        console.log(`💰 Emitted credits sync to ${s.username}: ${updatedCredits.get(s.userId)}`);
+                    }
+                }
+            }
 
             activeGames.delete(roomId);
             console.log(`🎴 Ba Cây game finished in room ${roomId}`);
@@ -147,7 +159,7 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
         io.to(roomId).emit('bacay:gameOver', { results, state });
 
         // Persist credits to database
-        await batchUpdateCredits(
+        const updatedCredits = await batchUpdateCredits(
             results.map(r => ({
                 userId: r.playerId,
                 creditChange: r.creditsChange,
@@ -155,6 +167,18 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
                 isWin: r.rank === 1
             }))
         );
+
+        // Emit credits changed to each player's socket
+        const roomSockets = io.sockets.adapter.rooms.get(roomId);
+        if (roomSockets) {
+            for (const socketId of roomSockets) {
+                const s = io.sockets.sockets.get(socketId) as AuthenticatedSocket;
+                if (s?.userId && updatedCredits.has(s.userId)) {
+                    s.emit('user:creditsChanged', { credits: updatedCredits.get(s.userId) });
+                    console.log(`💰 Emitted credits sync to ${s.username}: ${updatedCredits.get(s.userId)}`);
+                }
+            }
+        }
 
         activeGames.delete(roomId);
         console.log(`🎴 Ba Cây game force-revealed in room ${roomId}`);
