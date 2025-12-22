@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useSync } from '../../contexts/SyncContext';
 import './UserProfile.css';
 
 interface UserProfileProps {
@@ -27,7 +28,8 @@ interface ProfileData {
 }
 
 export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
-    const { user, credits, socket } = useAuth();
+    const { user, socket } = useAuth();
+    const { avatar: syncedAvatar, credits: syncedCredits, syncAvatar } = useSync();
     const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState<'stats' | 'achievements' | 'avatar'>('stats');
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -61,7 +63,7 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
                 setProfileData({
                     username: user?.username || 'Player',
                     avatar: '😀',
-                    credits: credits,
+                    credits: syncedCredits,
                     stats: { gamesPlayed: 0, gamesWon: 0, durakCount: 0 },
                     createdAt: new Date().toISOString()
                 });
@@ -86,7 +88,7 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
                 setProfileData({
                     username: user?.username || 'Player',
                     avatar: '😀',
-                    credits: credits,
+                    credits: syncedCredits,
                     stats: { gamesPlayed: 0, gamesWon: 0, durakCount: 0 },
                     createdAt: new Date().toISOString()
                 });
@@ -105,6 +107,9 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
         setIsSaving(true);
         setSelectedAvatar(avatar);
 
+        // Call syncAvatar to update globally
+        syncAvatar(avatar);
+
         (socket as unknown as { emit: (event: string, data: { avatar: string }, callback: (response: { success: boolean }) => void) => void })
             .emit('profile:updateAvatar', { avatar }, (response) => {
                 setIsSaving(false);
@@ -112,14 +117,14 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
                     setProfileData({ ...profileData, avatar });
                 }
             });
-    }, [socket, profileData]);
+    }, [socket, profileData, syncAvatar]);
 
     if (!isOpen) return null;
 
     // Use target user if provided, otherwise show current user
     const displayUser = targetUser || user;
-    const displayCredits = profileData?.credits ?? targetUser?.credits ?? credits;
-    const displayAvatar = profileData?.avatar ?? targetUser?.avatar ?? selectedAvatar;
+    const displayCredits = profileData?.credits ?? targetUser?.credits ?? syncedCredits;
+    const displayAvatar = profileData?.avatar ?? targetUser?.avatar ?? syncedAvatar ?? selectedAvatar;
     const isOwnProfile = !targetUser || targetUser.id === user?.id;
 
     if (!displayUser) return null;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useSync } from '../../contexts/SyncContext';
 import { UserProfile } from '../UserProfile/UserProfile';
 import type { Room, GameType } from '../../../../shared/types/game';
 import './Lobby.css';
@@ -11,7 +12,8 @@ interface LobbyProps {
 }
 
 export function Lobby({ onJoinGame }: LobbyProps) {
-    const { user, socket, logout, credits, avatar } = useAuth();
+    const { user, socket, logout } = useAuth();
+    const { avatar, credits } = useSync();
     const { theme, toggleTheme } = useTheme();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);

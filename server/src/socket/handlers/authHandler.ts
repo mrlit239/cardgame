@@ -340,6 +340,8 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
             if (isDatabaseConnected()) {
                 await User.findByIdAndUpdate(socket.userId, { avatar: data.avatar });
                 socket.avatar = data.avatar; // Update socket so room/lobby shows correct avatar
+                // Emit sync event to client
+                socket.emit('user:avatarChanged', { avatar: data.avatar });
                 callback({ success: true });
                 console.log(`✅ Avatar updated for ${socket.username}: ${data.avatar}`);
             } else {
@@ -347,6 +349,9 @@ export function setupAuthHandlers(io: Server, socket: AuthenticatedSocket) {
                 const user = inMemoryUsers.get(socket.userId);
                 if (user) {
                     (user as unknown as { avatar?: string }).avatar = data.avatar;
+                    socket.avatar = data.avatar;
+                    // Emit sync event to client
+                    socket.emit('user:avatarChanged', { avatar: data.avatar });
                     callback({ success: true });
                     console.log(`✅ Avatar updated (demo) for ${socket.username}: ${data.avatar}`);
                 } else {

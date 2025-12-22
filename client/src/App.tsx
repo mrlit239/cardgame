@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { SyncProvider } from './contexts/SyncContext';
 import { AuthPage } from './components/Auth';
 import { Lobby } from './components/Lobby';
 import { GameRoom } from './components/GameRoom';
@@ -147,7 +148,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <SyncProvider>
+          <AppContent />
+        </SyncProvider>
       </AuthProvider>
     </ThemeProvider>
   );
