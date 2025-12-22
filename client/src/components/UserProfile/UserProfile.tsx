@@ -36,11 +36,36 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Fetch profile data from server
+    // Fetch profile data from server with timeout
     useEffect(() => {
         if (!isOpen || !socket) return;
 
+        // Set default preset avatars immediately
+        const defaultAvatars = [
+            '😀', '😎', '🤠', '🥳', '😈', '👻', '🤖', '👽',
+            '🦊', '🐱', '🐶', '🐼', '🦁', '🐯', '🐸', '🦄',
+            '🔥', '⚡', '🌟', '💎', '🎯', '🎲', '🃏', '♠️'
+        ];
+        setPresetAvatars(defaultAvatars);
+
+        // Set loading state
         setIsLoading(true);
+
+        // Timeout to prevent infinite loading
+        const timeout = setTimeout(() => {
+            setIsLoading(false);
+            // Set default profile data if server doesn't respond
+            if (!profileData) {
+                setProfileData({
+                    username: user?.username || 'Player',
+                    avatar: '😀',
+                    credits: credits,
+                    stats: { gamesPlayed: 0, gamesWon: 0, durakCount: 0 },
+                    createdAt: new Date().toISOString()
+                });
+            }
+        }, 3000);
+
         (socket as unknown as {
             emit: (event: string, callback: (response: {
                 success: boolean;
@@ -48,6 +73,7 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
                 presetAvatars?: string[];
             }) => void) => void
         }).emit('profile:getProfile', (response) => {
+            clearTimeout(timeout);
             setIsLoading(false);
             if (response.success && response.profile) {
                 setProfileData(response.profile);
@@ -57,7 +83,9 @@ export function UserProfile({ isOpen, onClose, targetUser }: UserProfileProps) {
                 setPresetAvatars(response.presetAvatars);
             }
         });
-    }, [isOpen, socket]);
+
+        return () => clearTimeout(timeout);
+    }, [isOpen, socket, user, credits, profileData]);
 
     const updateAvatar = useCallback((avatar: string) => {
         if (!socket) return;

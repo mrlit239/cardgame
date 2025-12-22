@@ -268,15 +268,17 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
     // Loading
     if (!gameState) {
         return (
-            <div className="sprint-container">
+            <div className={`sprint-container ${!isStealth ? 'normal-mode' : ''}`}>
                 <div className="sprint-header">
-                    <button className="btn-link" onClick={handleLeave}>← Back to Dashboard</button>
-                    <h2>📊 Sprint Planning Session</h2>
+                    <button className="btn-link" onClick={handleLeave}>
+                        {isStealth ? '← Back to Dashboard' : '← Thoát'}
+                    </button>
+                    <h2>{isStealth ? '📊 Sprint Planning Session' : '🃏 Tiến Lên'}</h2>
                     <div></div>
                 </div>
                 <div className="loading-state">
                     <div className="spinner"></div>
-                    <p>Loading backlog items...</p>
+                    <p>{isStealth ? 'Loading backlog items...' : 'Đang tải...'}</p>
                 </div>
             </div>
         );
@@ -285,19 +287,25 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
     const otherPlayers = getOtherPlayers();
 
     return (
-        <div className="sprint-container">
+        <div className={`sprint-container ${!isStealth ? 'normal-mode' : ''}`}>
             {/* Header - looks like project tool header */}
             <div className="sprint-header">
-                <button className="btn-link" onClick={handleLeave}>← Dashboard</button>
+                <button className="btn-link" onClick={handleLeave}>
+                    {isStealth ? '← Dashboard' : '← Thoát'}
+                </button>
                 <div className="sprint-info">
-                    <span className="sprint-badge">{variant === 'south' ? '🎯 Flex' : '📏 Strict'}</span>
-                    <span className="sprint-name">Sprint Planning</span>
+                    <span className="sprint-badge">
+                        {variant === 'south'
+                            ? (isStealth ? '🎯 Flex' : '🌴 Miền Nam')
+                            : (isStealth ? '📏 Strict' : '🏔️ Miền Bắc')}
+                    </span>
+                    <span className="sprint-name">{isStealth ? 'Sprint Planning' : 'Tiến Lên'}</span>
                 </div>
                 <div className="turn-indicator">
                     {isMyTurn ? (
-                        <span className="your-turn">📍 Your estimate needed</span>
+                        <span className="your-turn">{isStealth ? '📍 Your estimate needed' : '📍 Lượt của bạn!'}</span>
                     ) : (
-                        <span>⏳ Waiting for {currentPlayer?.username}...</span>
+                        <span>⏳ {isStealth ? `Waiting for ${currentPlayer?.username}...` : `Chờ ${currentPlayer?.username}...`}</span>
                     )}
                 </div>
             </div>
