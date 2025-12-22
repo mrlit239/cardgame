@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './authHandler';
 import { BaCayGame, BaCayState, BaCayResult } from '../../games/bacay';
+import { batchUpdateCredits } from '../../utils/credits';
 
 // Store active Ba Cay games
 const activeGames = new Map<string, BaCayGame>();
@@ -63,7 +64,7 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
     });
 
     // Player reveals their hand
-    socket.on('bacay:reveal', (callback: (response: { success: boolean; message?: string }) => void) => {
+    socket.on('bacay:reveal', async (callback: (response: { success: boolean; message?: string }) => void) => {
         const roomId = socket.currentRoomId;
         if (!roomId) {
             callback({ success: false, message: 'Not in a room' });
@@ -104,6 +105,17 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
         if (game.isFinished()) {
             const results = game.getResults();
             io.to(roomId).emit('bacay:gameOver', { results, state: game.getState() });
+
+            // Persist credits to database
+            await batchUpdateCredits(
+                results.map(r => ({
+                    userId: r.playerId,
+                    creditChange: r.creditsChange,
+                    gameType: 'bacay' as const,
+                    isWin: r.rank === 1
+                }))
+            );
+
             activeGames.delete(roomId);
             console.log(`🎴 Ba Cây game finished in room ${roomId}`);
         }
@@ -112,7 +124,7 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
     });
 
     // Force reveal all (for host or timeout)
-    socket.on('bacay:revealAll', (callback: (response: { success: boolean; message?: string }) => void) => {
+    socket.on('bacay:revealAll', async (callback: (response: { success: boolean; message?: string }) => void) => {
         const roomId = socket.currentRoomId;
         if (!roomId) {
             callback({ success: false, message: 'Not in a room' });
@@ -133,6 +145,16 @@ export function setupBaCayHandler(io: Server, socket: AuthenticatedSocket) {
         const results = game.getResults();
         io.to(roomId).emit('bacay:stateUpdate', state);
         io.to(roomId).emit('bacay:gameOver', { results, state });
+
+        // Persist credits to database
+        await batchUpdateCredits(
+            results.map(r => ({
+                userId: r.playerId,
+                creditChange: r.creditsChange,
+                gameType: 'bacay' as const,
+                isWin: r.rank === 1
+            }))
+        );
 
         activeGames.delete(roomId);
         console.log(`🎴 Ba Cây game force-revealed in room ${roomId}`);

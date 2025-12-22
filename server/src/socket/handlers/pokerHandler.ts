@@ -2,9 +2,13 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './authHandler';
 import { PokerEngine, PokerConfig, PokerAction } from '../../games/PokerEngine';
 import { getInMemoryRoom } from './lobbyHandler';
+import { getUserCredits, batchUpdateCredits } from '../../utils/credits';
 
 // Store active Poker games
 const pokerGames: Map<string, PokerEngine> = new Map();
+
+// Track starting chips for credit calculation at end
+const gameStartingChips: Map<string, Map<string, number>> = new Map();
 
 export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
     // Start a new Poker game
@@ -21,21 +25,42 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
                 return callback?.({ success: false, message: 'Room not found' });
             }
 
-            const players = room.players.map(p => ({
-                id: p.id,
-                username: p.username,
-                chips: 1000, // Starting chips
-            }));
+            // Fetch actual credits from database for each player
+            const players = await Promise.all(
+                room.players.map(async (p) => {
+                    const credits = await getUserCredits(p.id);
+                    return {
+                        id: p.id,
+                        username: p.username,
+                        chips: credits, // Use real credits as chips
+                    };
+                })
+            );
 
-            if (players.length < 2 || players.length > 6) {
-                return callback?.({ success: false, message: `Need 2-6 players. Currently have ${players.length}` });
+            if (players.length < 2 || players.length > 9) {
+                return callback?.({ success: false, message: `Need 2-9 players. Currently have ${players.length}` });
+            }
+
+            // Check minimum credits for blinds
+            const bigBlind = config?.bigBlind || 20;
+            const playersWithInsufficientChips = players.filter(p => p.chips < bigBlind * 2);
+            if (playersWithInsufficientChips.length > 0) {
+                return callback?.({
+                    success: false,
+                    message: `Players ${playersWithInsufficientChips.map(p => p.username).join(', ')} have insufficient credits`
+                });
             }
 
             const pokerConfig: PokerConfig = {
                 smallBlind: config?.smallBlind || 10,
-                bigBlind: config?.bigBlind || 20,
-                startingChips: 1000,
+                bigBlind: bigBlind,
+                startingChips: 0, // Not used since we set individual chips
             };
+
+            // Store starting chips for end-of-game calculation
+            const startingChipsMap = new Map<string, number>();
+            players.forEach(p => startingChipsMap.set(p.id, p.chips));
+            gameStartingChips.set(roomId, startingChipsMap);
 
             // Create new game engine
             const engine = new PokerEngine(players, pokerConfig);
@@ -50,7 +75,7 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
             // Send personalized state to each player
             broadcastPokerState(io, roomId, engine);
 
-            console.log(`🎰 Poker game started in room ${roomId} with players: ${players.map(p => p.username).join(', ')}`);
+            console.log(`🎰 Poker game started in room ${roomId} with players: ${players.map(p => `${p.username}(${p.chips})`).join(', ')}`);
             callback?.({ success: true });
         } catch (error) {
             console.error('Poker start error:', error);
@@ -104,6 +129,25 @@ export function setupPokerHandlers(io: Server, socket: AuthenticatedSocket) {
         }
 
         if (!engine.canContinue()) {
+            // Persist credits to database before ending
+            const startingChipsMap = gameStartingChips.get(roomId);
+            if (startingChipsMap) {
+                const state = engine.getFullState();
+                const updates = state.players.map(player => {
+                    const startingChips = startingChipsMap.get(player.id) || 0;
+                    const creditChange = player.chips - startingChips;
+                    return {
+                        userId: player.id,
+                        creditChange,
+                        gameType: 'poker' as const,
+                        isWin: creditChange > 0
+                    };
+                });
+                await batchUpdateCredits(updates);
+                console.log(`💰 Poker credits persisted for room ${roomId}`);
+            }
+            gameStartingChips.delete(roomId);
+
             io.to(roomId).emit('poker:gameOver', { message: 'Not enough players to continue' });
             pokerGames.delete(roomId);
             return callback?.({ success: false, message: 'Game over' });

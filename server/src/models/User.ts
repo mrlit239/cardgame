@@ -21,6 +21,7 @@ export interface IUser extends Document {
         durakWins: number;
         durakCount: number; // Times being durak (loser)
         tienlenWins: number;
+        bacayWins: number;
     };
     createdAt: Date;
     updatedAt: Date;
@@ -58,6 +59,7 @@ const userSchema = new Schema<IUser>(
             durakWins: { type: Number, default: 0 },
             durakCount: { type: Number, default: 0 },
             tienlenWins: { type: Number, default: 0 },
+            bacayWins: { type: Number, default: 0 },
         },
     },
     {
