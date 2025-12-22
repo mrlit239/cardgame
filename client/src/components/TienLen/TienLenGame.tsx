@@ -343,7 +343,7 @@ export function TienLenGame({ onLeave, isHost }: TienLenGameProps) {
                         const isTheirTurn = gameState.players[gameState.currentPlayerIndex]?.id === player.id;
                         return (
                             <div key={player.id} className={`team-member ${isTheirTurn ? 'active' : ''} ${player.hasPassed ? 'away' : ''} ${player.isOut ? 'done' : ''}`}>
-                                <div className="member-avatar">{player.username.charAt(0).toUpperCase()}</div>
+                                <div className="member-avatar emoji-avatar">{(player as unknown as { avatar?: string }).avatar || player.username.charAt(0).toUpperCase()}</div>
                                 <div className="member-info">
                                     <span className="member-name">{player.username}</span>
                                     {player.isOut ? (

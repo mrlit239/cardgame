@@ -11,7 +11,7 @@ interface LobbyProps {
 }
 
 export function Lobby({ onJoinGame }: LobbyProps) {
-    const { user, socket, logout, credits } = useAuth();
+    const { user, socket, logout, credits, avatar } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -111,7 +111,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
                         <div
                             className="mini-avatar emoji-avatar"
                         >
-                            {(user as unknown as { avatar?: string })?.avatar || '😀'}
+                            {avatar}
                         </div>
                         <div className="profile-text">
                             <span className="profile-name">{user?.username}</span>

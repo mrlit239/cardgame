@@ -346,8 +346,8 @@ function PlayerSeat({
         <div className={`${seatClass} ${isCurrentTurn ? 'current-turn' : ''} ${player.folded ? 'folded' : ''} ${isWinner ? 'winner' : ''}`}>
             {isDealer && <div className="dealer-button">D</div>}
 
-            <div className="player-avatar">
-                {player.username.charAt(0).toUpperCase()}
+            <div className="player-avatar emoji-avatar">
+                {(player as unknown as { avatar?: string }).avatar || player.username.charAt(0).toUpperCase()}
             </div>
 
             <div className="player-info">
