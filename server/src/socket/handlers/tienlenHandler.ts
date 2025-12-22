@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './authHandler';
 import { TienLenEngine, TienLenConfig, TienLenVariant } from '../../games/TienLenEngine';
 import { getInMemoryRoom } from './lobbyHandler';
+import { batchUpdateCredits } from '../../utils/credits';
 
 // Store active Tiến Lên games
 const tienlenGames: Map<string, TienLenEngine> = new Map();
@@ -112,15 +113,49 @@ export function setupTienLenHandlers(io: Server, socket: AuthenticatedSocket) {
 
         // Check if game ended
         if (state.phase === 'ended') {
+            const betAmount = 100; // Default bet amount for TienLen
+            const playerCount = state.players.length;
+
+            // Calculate credits: 1st gets from others, last loses most
+            // Position 1: wins (n-1) * bet, Position n: loses (n-1) * bet
+            const rankings = state.winners.map((id, idx) => {
+                const position = idx + 1;
+                const player = state.players.find(p => p.id === id);
+                // First player wins from all others, others pay based on position
+                let creditsChange = 0;
+                if (position === 1) {
+                    creditsChange = (playerCount - 1) * betAmount;
+                } else if (position === playerCount) {
+                    creditsChange = -(playerCount - 1) * betAmount;
+                } else {
+                    // Middle positions
+                    creditsChange = (playerCount / 2 - position) * betAmount;
+                }
+
+                return {
+                    playerId: id,
+                    position,
+                    username: player?.username,
+                    creditsChange
+                };
+            });
+
             io.to(roomId).emit('tienlen:gameOver', {
                 winners: state.winners,
-                rankings: state.winners.map((id, idx) => ({
-                    playerId: id,
-                    position: idx + 1,
-                    username: state.players.find(p => p.id === id)?.username
-                }))
+                rankings
             });
-            console.log(`🏆 Tiến Lên ended in room ${roomId}`);
+
+            // Persist credits to database
+            await batchUpdateCredits(
+                rankings.map(r => ({
+                    userId: r.playerId,
+                    creditChange: r.creditsChange,
+                    gameType: 'tienlen' as const,
+                    isWin: r.position === 1
+                }))
+            );
+
+            console.log(`🏆 Tiến Lên ended in room ${roomId}, credits persisted`);
         }
 
         callback?.({ success: true });

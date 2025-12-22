@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './authHandler';
 import { DurakEngine, DurakConfig } from '../../games/DurakEngine';
 import { getInMemoryRoom } from './lobbyHandler';
+import { batchUpdateCredits } from '../../utils/credits';
 
 // Store active Durak games
 const durakGames: Map<string, DurakEngine> = new Map();
@@ -213,7 +214,7 @@ function broadcastDurakState(io: Server, roomId: string, engine: DurakEngine) {
 }
 
 // Check if game has ended
-function checkGameEnd(io: Server, roomId: string, engine: DurakEngine) {
+async function checkGameEnd(io: Server, roomId: string, engine: DurakEngine) {
     const state = engine.getState();
     if (state.phase === 'ended') {
         // Calculate game results
@@ -228,8 +229,18 @@ function checkGameEnd(io: Server, roomId: string, engine: DurakEngine) {
             gameResults
         });
 
+        // Persist credits to database
+        await batchUpdateCredits(
+            gameResults.map(result => ({
+                userId: result.playerId,
+                creditChange: result.creditsChange,
+                gameType: 'durak' as const,
+                isWin: result.position === 1
+            }))
+        );
+
         console.log(`🏆 Durak ended in room ${roomId}. Durak: ${durak?.username || 'None'}`);
-        console.log(`💰 Game results:`, gameResults);
+        console.log(`💰 Game results persisted:`, gameResults);
     }
 }
 
