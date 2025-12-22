@@ -70,6 +70,37 @@
     font-weight: 400;
 }
 
+/* Bet Selector */
+.bet-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px 20px;
+    border-radius: 8px;
+}
+
+.bet-selector label {
+    color: #8b949e;
+    font-size: 0.9rem;
+}
+
+.bet-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fcd34d;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bet-select:focus {
+    outline: none;
+    border-color: #fcd34d;
+}
+
 /* Loading */
 .loading-state {
     flex: 1;

@@ -32,8 +32,18 @@ interface DurakState {
     currentActorIndex: number;
     phase: 'attacking' | 'defending' | 'ended';
     winners: string[];
-    attackersDone: Set<string>;
+    attackersDone: string[]; // Now an array
     myHand: Card[];
+    betAmount: number;
+    gameResults?: DurakGameResult[];
+}
+
+interface DurakGameResult {
+    playerId: string;
+    username: string;
+    position: number;
+    creditsChange: number;
+    isDurak: boolean;
 }
 
 // Card rendering with suit symbols
@@ -112,21 +122,22 @@ export function DurakGame({ onLeave, isHost }: DurakGameProps) {
     const [error, setError] = useState('');
     const [isStarting, setIsStarting] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
+    const [betAmount, setBetAmount] = useState(100);
 
     useEffect(() => {
         if (!socket) return;
 
         const handleStateUpdate = (state: DurakState) => {
-            // Convert attackersDone from array/object back to Set
-            state.attackersDone = new Set(state.attackersDone as unknown as string[]);
+            // attackersDone is now already an array from server
             setGameState(state);
             setSelectedCard(null);
             setSelectedAttackCard(null);
             setGameStarted(true);
         };
 
-        const handleGameOver = (data: { winners: string[]; durak: { id: string; username: string } | null }) => {
+        const handleGameOver = (data: { winners: string[]; durak: { id: string; username: string } | null; gameResults?: DurakGameResult[] }) => {
             console.log('Game over! Durak:', data.durak?.username);
+            // Results will be in gameState.gameResults
         };
 
         const handlePlayerLeft = () => {
@@ -154,14 +165,14 @@ export function DurakGame({ onLeave, isHost }: DurakGameProps) {
     const startGame = useCallback(() => {
         if (!socket || !isHost) return;
         setIsStarting(true);
-        (socket as unknown as { emit: (event: string, data: unknown, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('durak:start', {}, (response) => {
+        (socket as unknown as { emit: (event: string, data: unknown, callback: (response: { success: boolean; message?: string }) => void) => void }).emit('durak:start', { betAmount }, (response) => {
             setIsStarting(false);
             if (!response.success) {
                 setError(response.message || 'Failed to start game');
                 setTimeout(() => setError(''), 3000);
             }
         });
-    }, [socket, isHost]);
+    }, [socket, isHost, betAmount]);
 
     const attack = useCallback((cardId: string) => {
         if (!socket) return;
@@ -257,13 +268,29 @@ export function DurakGame({ onLeave, isHost }: DurakGameProps) {
                 </div>
                 <div className="durak-lobby">
                     <h3>Waiting for players...</h3>
+                    {isHost && (
+                        <div className="bet-selector">
+                            <label>Bet Amount:</label>
+                            <select
+                                value={betAmount}
+                                onChange={(e) => setBetAmount(Number(e.target.value))}
+                                className="bet-select"
+                            >
+                                <option value={50}>50 💰</option>
+                                <option value={100}>100 💰</option>
+                                <option value={200}>200 💰</option>
+                                <option value={500}>500 💰</option>
+                                <option value={1000}>1000 💰</option>
+                            </select>
+                        </div>
+                    )}
                     {isHost ? (
                         <button
                             className="btn-primary btn-large"
                             onClick={startGame}
                             disabled={isStarting}
                         >
-                            {isStarting ? 'Starting...' : '▶ Start Game'}
+                            {isStarting ? 'Starting...' : `▶ Start Game (${betAmount}💰)`}
                         </button>
                     ) : (
                         <p>Waiting for host to start...</p>

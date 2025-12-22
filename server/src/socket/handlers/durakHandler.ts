@@ -40,7 +40,8 @@ export function setupDurakHandlers(io: Server, socket: AuthenticatedSocket) {
 
             const gameConfig: DurakConfig = {
                 deckSize: config?.deckSize || 52,
-                handSize: config?.handSize || 6
+                handSize: config?.handSize || 6,
+                betAmount: config?.betAmount || 100
             };
 
             // Create new game engine
@@ -55,7 +56,7 @@ export function setupDurakHandlers(io: Server, socket: AuthenticatedSocket) {
                 broadcastDurakState(io, roomId, engine);
             }, 100);
 
-            console.log(`🃏 Durak started in room ${roomId} by host ${socket.username}`);
+            console.log(`🃏 Durak started in room ${roomId} by host ${socket.username} (bet: ${gameConfig.betAmount})`);
             callback?.({ success: true });
         } catch (error) {
             console.error('Durak start error:', error);
@@ -215,14 +216,20 @@ function broadcastDurakState(io: Server, roomId: string, engine: DurakEngine) {
 function checkGameEnd(io: Server, roomId: string, engine: DurakEngine) {
     const state = engine.getState();
     if (state.phase === 'ended') {
+        // Calculate game results
+        const gameResults = engine.calculateGameResults();
+
         // Find the durak (player still with cards)
         const durak = state.players.find(p => !p.isOut && p.hand.length > 0);
 
         io.to(roomId).emit('durak:gameOver', {
             winners: state.winners,
-            durak: durak ? { id: durak.id, username: durak.username } : null
+            durak: durak ? { id: durak.id, username: durak.username } : null,
+            gameResults
         });
+
         console.log(`🏆 Durak ended in room ${roomId}. Durak: ${durak?.username || 'None'}`);
+        console.log(`💰 Game results:`, gameResults);
     }
 }
 

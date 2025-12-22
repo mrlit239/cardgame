@@ -3,6 +3,7 @@ import { Card, Suit, createDeck, shuffleDeck } from '../types/card';
 export interface DurakConfig {
     deckSize: 52 | 36; // 52 standard, 36 removes 2-5
     handSize: 6;
+    betAmount: number; // Bet per player
 }
 
 export interface DurakPlayer {
@@ -17,6 +18,14 @@ export interface TableBout {
     defenseCard?: Card; // undefined if not yet defended
 }
 
+export interface DurakGameResult {
+    playerId: string;
+    username: string;
+    position: number; // 1 = first to finish, etc.
+    creditsChange: number;
+    isDurak: boolean;
+}
+
 export interface DurakState {
     players: DurakPlayer[];
     deck: Card[];
@@ -29,8 +38,15 @@ export interface DurakState {
     currentActorIndex: number; // Who is currently acting (attacker adding, or defender defending)
     phase: 'attacking' | 'defending' | 'ended';
     winners: string[]; // Players who have finished (in order)
-    attackersDone: Set<string>; // Attackers who have passed on adding more
+    attackersDone: string[]; // Attackers who have passed (serialized as array)
     lastActionBy: string | null;
+    betAmount: number;
+    gameResults?: DurakGameResult[];
+}
+
+// Internal state uses Set for efficiency
+interface InternalDurakState extends Omit<DurakState, 'attackersDone'> {
+    attackersDone: Set<string>;
 }
 
 // Get card value for comparison (2=2, ..., 10=10, J=11, Q=12, K=13, A=14)
@@ -104,7 +120,7 @@ function sortHand(cards: Card[]): Card[] {
 }
 
 export class DurakEngine {
-    private state: DurakState;
+    private state: InternalDurakState;
     private config: DurakConfig;
 
     constructor(
@@ -113,7 +129,8 @@ export class DurakEngine {
     ) {
         this.config = {
             deckSize: config.deckSize || 52,
-            handSize: config.handSize || 6
+            handSize: config.handSize || 6,
+            betAmount: config.betAmount || 100
         };
 
         // Create and shuffle deck
@@ -183,12 +200,21 @@ export class DurakEngine {
             phase: 'attacking',
             winners: [],
             attackersDone: new Set(),
-            lastActionBy: null
+            lastActionBy: null,
+            betAmount: this.config.betAmount
+        };
+    }
+
+    // Convert internal state to serializable state
+    private serializeState(): DurakState {
+        return {
+            ...this.state,
+            attackersDone: Array.from(this.state.attackersDone)
         };
     }
 
     getState(): DurakState {
-        return { ...this.state, attackersDone: new Set(this.state.attackersDone) };
+        return this.serializeState();
     }
 
     // Get state for a specific player (hide other hands)
@@ -202,11 +228,58 @@ export class DurakEngine {
         }));
 
         return {
-            ...this.state,
+            ...this.serializeState(),
             players: playersWithHidden as unknown as DurakPlayer[],
-            attackersDone: new Set(this.state.attackersDone),
             myHand: player?.hand || []
         };
+    }
+
+    // Calculate game results when game ends
+    calculateGameResults(): DurakGameResult[] {
+        const results: DurakGameResult[] = [];
+        const numPlayers = this.state.players.length;
+        const betAmount = this.config.betAmount;
+
+        // Winners get credits, durak loses
+        // Pool = betAmount * numPlayers
+        // Winners split the pool proportionally based on position
+        // Durak loses betAmount * (numPlayers - 1)
+
+        const pool = betAmount * numPlayers;
+        const numWinners = this.state.winners.length;
+
+        // Find durak (player still in game with cards)
+        const durak = this.state.players.find(p => !p.isOut);
+
+        for (let i = 0; i < this.state.winners.length; i++) {
+            const winnerId = this.state.winners[i];
+            const player = this.state.players.find(p => p.id === winnerId);
+            if (!player) continue;
+
+            // Earlier finishers get more
+            const share = Math.floor(pool / numWinners);
+
+            results.push({
+                playerId: winnerId,
+                username: player.username,
+                position: i + 1,
+                creditsChange: share - betAmount, // Net gain
+                isDurak: false
+            });
+        }
+
+        // Durak loses everything
+        if (durak) {
+            results.push({
+                playerId: durak.id,
+                username: durak.username,
+                position: numPlayers,
+                creditsChange: -betAmount,
+                isDurak: true
+            });
+        }
+
+        return results;
     }
 
     // Primary attacker starts an attack
