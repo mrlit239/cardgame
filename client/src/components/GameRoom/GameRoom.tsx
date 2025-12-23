@@ -122,6 +122,7 @@ export function GameRoom({ room: initialRoom, onLeave, onGameStart }: GameRoomPr
         durak: { name: 'Durak', icon: '🎯', description: 'Russian Card Game - Don\'t be the fool!' },
         tictactoe: { name: 'Tic-Tac-Toe', icon: '❌', description: 'Classic XO Game - Get 3 in a row!' },
         bacay: { name: 'Ba Cây', icon: '🃏', description: '3-Card Game - Score = last digit of total' },
+        uno: { name: 'UNO', icon: '🔴', description: 'Classic Color Matching - Play same color or number!' },
     };
 
     const currentPlayer = room.players.find(p => p.id === user?.id);

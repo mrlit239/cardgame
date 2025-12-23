@@ -7,6 +7,7 @@ import { setupPokerHandlers } from './handlers/pokerHandler';
 import { setupTienLenHandlers } from './handlers/tienlenHandler';
 import { setupDurakHandlers } from './handlers/durakHandler';
 import { setupBaCayHandler } from './handlers/bacayHandler';
+import { setupUnoHandler } from './handlers/unoHandler';
 
 export function setupSocketHandlers(io: Server) {
     io.on('connection', (socket: AuthenticatedSocket) => {
@@ -21,6 +22,7 @@ export function setupSocketHandlers(io: Server) {
         setupTienLenHandlers(io, socket);
         setupDurakHandlers(io, socket);
         setupBaCayHandler(io, socket);
+        setupUnoHandler(io, socket);
 
         // Handle disconnection
         socket.on('disconnect', (reason) => {

@@ -1,7 +1,7 @@
 import { User, IUser } from '../models/User';
 
 // Game types for stats tracking
-export type GameTypeForStats = 'phom' | 'poker' | 'durak' | 'tienlen' | 'bacay';
+export type GameTypeForStats = 'phom' | 'poker' | 'durak' | 'tienlen' | 'bacay' | 'uno';
 
 // Stats field mapping
 const GAME_WIN_FIELDS: Record<GameTypeForStats, keyof IUser['stats']> = {
@@ -10,6 +10,7 @@ const GAME_WIN_FIELDS: Record<GameTypeForStats, keyof IUser['stats']> = {
     durak: 'durakWins',
     tienlen: 'tienlenWins',
     bacay: 'bacayWins',
+    uno: 'unoWins',
 };
 
 /**

@@ -11,6 +11,7 @@ import { PokerGame } from './components/Poker/PokerGame';
 import { TienLenGame } from './components/TienLen/TienLenGame';
 import { DurakGame } from './components/Durak/DurakGame';
 import { BaCayGame } from './components/BaCay/BaCayGame';
+import { UnoGame } from './components/Uno/UnoGame';
 import type { Room } from '../../shared/types/game';
 import './index.css';
 
@@ -123,6 +124,15 @@ function AppContent() {
       if (currentRoom.gameType === 'bacay') {
         return (
           <BaCayGame
+            onLeave={handleLeaveRoom}
+          />
+        );
+      }
+
+      if (currentRoom.gameType === 'uno') {
+        return (
+          <UnoGame
+            roomId={currentRoom.id}
             onLeave={handleLeaveRoom}
           />
         );

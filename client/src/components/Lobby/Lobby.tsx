@@ -85,6 +85,7 @@ export function Lobby({ onJoinGame }: LobbyProps) {
         durak: { name: 'Durak', icon: '🎯', players: '2-6', description: 'Russian Card Game' },
         tictactoe: { name: 'Tic-Tac-Toe', icon: '❌', players: '2', description: 'Classic XO Game' },
         bacay: { name: 'Ba Cây', icon: '🃏', players: '2-12', description: '3-Card Vietnamese' },
+        uno: { name: 'UNO', icon: '🔴', players: '2-10', description: 'Classic Color Matching' },
     };
 
     return (
